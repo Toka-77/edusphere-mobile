@@ -1,0 +1,86 @@
+﻿Analyzing eduspher...                                           
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\academic_warnings_screen.dart:91:24 - deprecated_member_use
+warning - The value of the local variable 'border' isn't used - lib\screens\add_drop_screen.dart:284:11 - unused_local_variable
+warning - The value of the local variable 'txt' isn't used - lib\screens\add_drop_screen.dart:679:11 - unused_local_variable
+warning - The value of the local variable 'txtSec' isn't used - lib\screens\add_drop_screen.dart:680:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\add_drop_screen.dart:872:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\add_drop_screen.dart:876:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\add_drop_screen.dart:886:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\add_drop_screen.dart:890:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\admin_panel_screen.dart:356:28 - deprecated_member_use
+warning - The value of the local variable 'txtSec' isn't used - lib\screens\assignments_screen.dart:326:11 - unused_local_variable
+warning - The value of the local variable 'border' isn't used - lib\screens\attendance_qr_screen.dart:62:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\screens\attendance_qr_screen.dart:72:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\attendance_qr_screen.dart:76:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\attendance_qr_screen.dart:77:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\attendance_qr_screen.dart:78:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\attendance_qr_screen.dart:83:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\attendance_qr_screen.dart:85:24 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\complaints_screen.dart:417:24 - deprecated_member_use
+warning - Unused import: '../widgets/stat_card.dart' - lib\screens\curriculum_screen.dart:3:8 - unused_import
+warning - Unused import: 'records_screen.dart' - lib\screens\dashboard_screen.dart:12:8 - unused_import
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\dashboard_screen.dart:463:37 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:464:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:470:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:476:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\dashboard_screen.dart:481:29 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard_screen.dart:814:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard_screen.dart:824:56 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:46:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:48:16 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:49:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:50:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:51:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:52:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:52:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:54:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:54:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:58:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:59:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:60:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:60:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:62:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:62:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:68:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:81:22 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:82:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:89:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:96:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:103:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:112:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:115:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:127:22 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:128:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:135:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:142:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:149:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:158:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:161:13 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\grades_screen.dart:174:22 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:175:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:182:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\grades_screen.dart:189:17 - prefer_const_constructors
+warning - Unused import: '../theme_provider.dart' - lib\screens\home_screen.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\medical_excuses_screen.dart:375:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\official_requests_screen.dart:203:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\records_screen.dart:71:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\records_screen.dart:171:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\records_screen.dart:180:32 - deprecated_member_use
+  error - Invalid constant value - lib\screens\records_screen.dart:199:102 - invalid_constant
+   info - Use 'const' with the constructor to improve performance - lib\screens\records_screen.dart:242:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\records_screen.dart:246:29 - prefer_const_constructors
+  error - Invalid constant value - lib\screens\records_screen.dart:379:33 - invalid_constant
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\records_screen.dart:589:16 - deprecated_member_use
+warning - Unused import: 'change_password_screen.dart' - lib\screens\settings_screen.dart:5:8 - unused_import
+   info - The variable name '_2faAuth' isn't a lowerCamelCase identifier - lib\screens\settings_screen.dart:28:8 - non_constant_identifier_names
+   info - The variable name '_2faSms' isn't a lowerCamelCase identifier - lib\screens\settings_screen.dart:29:8 - non_constant_identifier_names
+warning - The declaration '_logout' isn't referenced - lib\screens\settings_screen.dart:90:8 - unused_element
+   info - Use 'const' with the constructor to improve performance - lib\screens\settings_screen.dart:279:29 - prefer_const_constructors
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\settings_screen.dart:1007:13 - deprecated_member_use
+warning - The value of the local variable 'card' isn't used - lib\screens\timetable_screen.dart:176:11 - unused_local_variable
+warning - The value of the local variable 'txt' isn't used - lib\screens\timetable_screen.dart:178:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\screens\timetable_screen.dart:188:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\timetable_screen.dart:189:24 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\stat_card.dart:46:36 - deprecated_member_use
+
