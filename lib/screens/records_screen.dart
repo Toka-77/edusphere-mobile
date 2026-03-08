@@ -155,7 +155,7 @@ class RecordsScreen
                       label:
                           'Program',
                       value:
-                          'B.Sc. in Computer Science'),
+                          'B.Sc. in Management Information Systems'),
                   const SizedBox(
                       height: 8),
                   _InfoTile(

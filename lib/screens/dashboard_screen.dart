@@ -480,7 +480,7 @@ class _DashboardState
                             AppTheme
                                 .primaryLight,
                         child: Text(
-                            'RA',
+                            'TK',
                             style: TextStyle(
                                 color: AppTheme.primary,
                                 fontWeight: FontWeight.w700,
