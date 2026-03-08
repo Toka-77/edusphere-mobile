@@ -24,11 +24,11 @@ class _Notif {
   final bool isNew;
   const _Notif(
       {required this.icon,
-        required this.color,
-        required this.title,
-        required this.sub,
-        required this.time,
-        required this.isNew});
+      required this.color,
+      required this.title,
+      required this.sub,
+      required this.time,
+      required this.isNew});
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -42,8 +42,8 @@ class DashboardScreen
 
   @override
   State<DashboardScreen>
-  createState() =>
-      _DashboardState();
+      createState() =>
+          _DashboardState();
 }
 
 class _DashboardState
@@ -57,9 +57,9 @@ class _DashboardState
             .assignment_outlined,
         color: Color(0xFF3B82F6),
         title:
-        'New Assignment Posted',
+            'New Assignment Posted',
         sub:
-        'Web Development - Project 3 is now available',
+            'Web Development - Project 3 is now available',
         time: '5 min ago',
         isNew: true),
     _Notif(
@@ -67,7 +67,7 @@ class _DashboardState
         color: Color(0xFF10B981),
         title: 'Grade Updated',
         sub:
-        'Your grade for Midterm Exam has been posted',
+            'Your grade for Midterm Exam has been posted',
         time: '1 hour ago',
         isNew: true),
     _Notif(
@@ -75,7 +75,7 @@ class _DashboardState
         color: Color(0xFFF59E0B),
         title: 'Class Reminder',
         sub:
-        'Advanced JavaScript starts in 30 minutes',
+            'Advanced JavaScript starts in 30 minutes',
         time: '2 hours ago',
         isNew: false),
     _Notif(
@@ -84,7 +84,7 @@ class _DashboardState
         color: Color(0xFF8B5CF6),
         title: 'New Announcement',
         sub:
-        'Campus will be closed on Friday for maintenance',
+            'Campus will be closed on Friday for maintenance',
         time: '1 day ago',
         isNew: false),
   ];
@@ -92,85 +92,176 @@ class _DashboardState
   // ── helpers ──────────────────────────────────────────────────────
   bool get _isDark =>
       themeModeNotifier.value ==
-          ThemeMode.dark;
+      ThemeMode.dark;
 
   Color _card(BuildContext ctx) =>
       Theme.of(ctx).brightness ==
-          Brightness.dark
+              Brightness.dark
           ? AppTheme.darkCard
           : Colors.white;
 
   Color _border(
-      BuildContext ctx) =>
+          BuildContext ctx) =>
       Theme.of(ctx).brightness ==
-          Brightness.dark
+              Brightness.dark
           ? AppTheme.darkBorder
           : AppTheme.border;
 
   Color _txt(BuildContext ctx) =>
       Theme.of(ctx).brightness ==
-          Brightness.dark
+              Brightness.dark
           ? AppTheme.darkText
           : AppTheme.textPrimary;
   // ── search dialog ──────────────────────────────────────────────────
-  void _showSearch(BuildContext ctx, Color txt) {
-    final isDark = Theme.of(ctx).brightness == Brightness.dark;
-    final cardBg = isDark ? AppTheme.darkCard : Colors.white;
-    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+  void _showSearch(
+      BuildContext ctx,
+      Color txt) {
+    final isDark =
+        Theme.of(ctx).brightness ==
+            Brightness.dark;
+    final cardBg = isDark
+        ? AppTheme.darkCard
+        : Colors.white;
+    final txtSec = isDark
+        ? AppTheme.darkTextSec
+        : AppTheme.textSecondary;
     showDialog(
       context: ctx,
       builder: (dialogCtx) {
         String query = '';
         final items = [
-          {'label': 'Dashboard', 'icon': '📊', 'desc': 'Main overview'},
-          {'label': 'Attendance QR', 'icon': '📷', 'desc': 'QR attendance'},
-          {'label': 'Student Services', 'icon': '👥', 'desc': 'Medical, complaints'},
-          {'label': 'Curriculum', 'icon': '📚', 'desc': 'Course plan'},
-          {'label': 'Records', 'icon': '📄', 'desc': 'Academic records'},
-          {'label': 'Admin Panel', 'icon': '🛡️', 'desc': 'Administration'},
-          {'label': 'AI Assistant', 'icon': '🤖', 'desc': 'Chat with AI'},
-          {'label': 'Settings', 'icon': '⚙️', 'desc': 'Preferences'},
+          {
+            'label': 'Dashboard',
+            'icon': '📊',
+            'desc': 'Main overview'
+          },
+          {
+            'label':
+                'Attendance QR',
+            'icon': '📷',
+            'desc': 'QR attendance'
+          },
+          {
+            'label':
+                'Student Services',
+            'icon': '👥',
+            'desc':
+                'Medical, complaints'
+          },
+          {
+            'label': 'Curriculum',
+            'icon': '📚',
+            'desc': 'Course plan'
+          },
+          {
+            'label': 'Records',
+            'icon': '📄',
+            'desc':
+                'Academic records'
+          },
+          {
+            'label': 'Admin Panel',
+            'icon': '🛡️',
+            'desc':
+                'Administration'
+          },
+          {
+            'label':
+                'AI Assistant',
+            'icon': '🤖',
+            'desc': 'Chat with AI'
+          },
+          {
+            'label': 'Settings',
+            'icon': '⚙️',
+            'desc': 'Preferences'
+          },
         ];
-        return StatefulBuilder(builder: (dialogCtx, setS) {
-          final results = query.isNotEmpty
-              ? items.where((i) =>
-                  (i['label']! + i['desc']!).toLowerCase().contains(query.toLowerCase())).toList()
-              : <Map<String, String>>[];
+        return StatefulBuilder(
+            builder:
+                (dialogCtx, setS) {
+          final results = query
+                  .isNotEmpty
+              ? items
+                  .where((i) => (i[
+                              'label']! +
+                          i[
+                              'desc']!)
+                      .toLowerCase()
+                      .contains(query
+                          .toLowerCase()))
+                  .toList()
+              : <Map<String,
+                  String>>[];
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            backgroundColor: cardBg,
+            shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius
+                        .circular(
+                            16)),
+            backgroundColor:
+                cardBg,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding:
+                  const EdgeInsets
+                      .all(16),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize:
+                    MainAxisSize
+                        .min,
                 children: [
                   TextField(
-                    autofocus: true,
-                    style: TextStyle(color: txt),
-                    decoration: InputDecoration(
-                      hintText: 'Search anything...',
-                      hintStyle: TextStyle(color: txtSec),
-                      prefixIcon: Icon(Icons.search, color: txtSec),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    autofocus:
+                        true,
+                    style: TextStyle(
+                        color:
+                            txt),
+                    decoration:
+                        InputDecoration(
+                      hintText:
+                          'Search anything...',
+                      hintStyle:
+                          TextStyle(
+                              color:
+                                  txtSec),
+                      prefixIcon: Icon(
+                          Icons
+                              .search,
+                          color:
+                              txtSec),
+                      border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(
+                                  12)),
                     ),
-                    onChanged: (v) => setS(() => query = v),
+                    onChanged: (v) =>
+                        setS(() =>
+                            query =
+                                v),
                   ),
-                  if (results.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    ...results.map((item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(children: [
-                            Text(item['icon']!, style: const TextStyle(fontSize: 18)),
-                            const SizedBox(width: 12),
-                            Expanded(child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item['label']!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: txt)),
-                                Text(item['desc']!, style: TextStyle(fontSize: 12, color: txtSec)),
-                              ],
+                  if (results
+                      .isNotEmpty) ...[
+                    const SizedBox(
+                        height: 8),
+                    ...results.map(
+                        (item) =>
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 6),
+                              child:
+                                  Row(children: [
+                                Text(item['icon']!, style: const TextStyle(fontSize: 18)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item['label']!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: txt)),
+                                    Text(item['desc']!, style: TextStyle(fontSize: 12, color: txtSec)),
+                                  ],
+                                )),
+                              ]),
                             )),
-                          ]),
-                        )),
                   ],
                 ],
               ),
@@ -187,7 +278,7 @@ class _DashboardState
       BuildContext context) {
     final card = _card(context);
     final border =
-    _border(context);
+        _border(context);
     final txt = _txt(context);
     final newCount = _notifs
         .where((n) => n.isNew)
@@ -199,30 +290,50 @@ class _DashboardState
           // ── Main scroll ──────────────────────────────────────────
           SafeArea(
             child:
-            CustomScrollView(
+                CustomScrollView(
               slivers: [
                 // ── AppBar ─────────────────────────────────────────
                 SliverAppBar(
                   pinned: true,
-                  backgroundColor: card,
-                  leading: IconButton(
-                    icon: Icon(Icons.menu, color: txt),
-                    onPressed: HomeScreen.openDrawer,
+                  backgroundColor:
+                      card,
+                  leading:
+                      IconButton(
+                    icon: Icon(
+                        Icons.menu,
+                        color:
+                            txt),
+                    onPressed:
+                        HomeScreen
+                            .openDrawer,
                   ),
                   title: Row(
                       children: [
-                        Image.asset(
-                              'assets/images/logo.png',
-                              width: 52,
-                              height: 52,
-                              fit: BoxFit.contain),
+                        Container(
+                          width:
+                              36,
+                          height:
+                              36,
+                          decoration: BoxDecoration(
+                              color: AppTheme
+                                  .primary,
+                              borderRadius:
+                                  BorderRadius.circular(10)),
+                          child: const Icon(
+                              Icons
+                                  .school,
+                              color: Colors
+                                  .white,
+                              size:
+                                  20),
+                        ),
                         const SizedBox(
                             width:
-                            10),
+                                10),
                         Column(
                           crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                              CrossAxisAlignment
+                                  .start,
                           children: [
                             Text(
                                 'EduSphere',
@@ -236,40 +347,47 @@ class _DashboardState
                   actions: [
                     // 🔍 Search
                     IconButton(
-                      onPressed: () => _showSearch(context, txt),
-                      icon: Icon(Icons.search, color: txt),
+                      onPressed: () =>
+                          _showSearch(
+                              context,
+                              txt),
+                      icon: Icon(
+                          Icons
+                              .search,
+                          color:
+                              txt),
                     ),
                     // 🔔 Notification bell
                     IconButton(
                       onPressed: () =>
                           setState(() =>
-                          _showNotif =
-                          !_showNotif),
+                              _showNotif =
+                                  !_showNotif),
                       icon: Stack(
                         clipBehavior:
-                        Clip.none,
+                            Clip.none,
                         children: [
                           Icon(
                               Icons
                                   .notifications_outlined,
                               color:
-                              txt),
+                                  txt),
                           Positioned(
                             right:
-                            -2,
+                                -2,
                             top:
-                            -2,
+                                -2,
                             child:
-                            Container(
+                                Container(
                               width:
-                              16,
+                                  16,
                               height:
-                              16,
+                                  16,
                               decoration: const BoxDecoration(
                                   color: AppTheme.primary,
                                   shape: BoxShape.circle),
                               alignment:
-                              Alignment.center,
+                                  Alignment.center,
                               child: Text(
                                   '$newCount',
                                   style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
@@ -286,18 +404,18 @@ class _DashboardState
                           Icons
                               .settings_outlined,
                           color:
-                          txt),
+                              txt),
                       onSelected:
                           (v) {
                         if (v ==
                             'dark') {
                           themeModeNotifier.value = _isDark
                               ? ThemeMode
-                              .light
+                                  .light
                               : ThemeMode
-                              .dark;
+                                  .dark;
                           setState(
-                                  () {});
+                              () {});
                         } else if (v ==
                             'pass') {
                           Navigator.push(
@@ -310,14 +428,14 @@ class _DashboardState
                               context,
                               MaterialPageRoute(
                                   builder: (_) => const LoginScreen()),
-                                  (_) => false);
+                              (_) => false);
                         }
                       },
                       itemBuilder:
                           (_) => [
                         PopupMenuItem(
                           value:
-                          'dark',
+                              'dark',
                           child: Row(
                               children: [
                                 Icon(_isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, color: AppTheme.info, size: 20),
@@ -327,7 +445,7 @@ class _DashboardState
                         ),
                         const PopupMenuItem(
                           value:
-                          'pass',
+                              'pass',
                           child: Row(
                               children: [
                                 Icon(Icons.lock_outline, color: AppTheme.warning, size: 20),
@@ -338,7 +456,7 @@ class _DashboardState
                         const PopupMenuDivider(),
                         const PopupMenuItem(
                           value:
-                          'logout',
+                              'logout',
                           child: Row(
                               children: [
                                 Icon(Icons.logout, color: AppTheme.primary, size: 20),
@@ -353,16 +471,16 @@ class _DashboardState
                     const Padding(
                       padding: EdgeInsets
                           .only(
-                          right:
-                          12),
+                              right:
+                                  12),
                       child:
-                      CircleAvatar(
+                          CircleAvatar(
                         radius: 18,
                         backgroundColor:
-                        AppTheme
-                            .primaryLight,
+                            AppTheme
+                                .primaryLight,
                         child: Text(
-                            'TK',
+                            'RA',
                             style: TextStyle(
                                 color: AppTheme.primary,
                                 fontWeight: FontWeight.w700,
@@ -376,13 +494,13 @@ class _DashboardState
                 SliverToBoxAdapter(
                   child: Padding(
                     padding:
-                    const EdgeInsets
-                        .all(
-                        16),
+                        const EdgeInsets
+                            .all(
+                            16),
                     child: Column(
                       crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                          CrossAxisAlignment
+                              .start,
                       children: [
                         // Welcome banner
                         Container(
@@ -392,25 +510,25 @@ class _DashboardState
                               .all(
                               20),
                           decoration:
-                          BoxDecoration(
+                              BoxDecoration(
                             gradient:
-                            const LinearGradient(
+                                const LinearGradient(
                               colors: [
                                 AppTheme.primary,
                                 AppTheme.primaryDark
                               ],
                               begin:
-                              Alignment.topLeft,
+                                  Alignment.topLeft,
                               end:
-                              Alignment.bottomRight,
+                                  Alignment.bottomRight,
                             ),
                             borderRadius:
-                            BorderRadius.circular(20),
+                                BorderRadius.circular(20),
                           ),
                           child:
-                          const Column(
+                              const Column(
                             crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
                                   'Welcome back,',
@@ -430,23 +548,23 @@ class _DashboardState
                         ),
                         const SizedBox(
                             height:
-                            20),
+                                20),
 
                         // Stat cards
                         GridView
                             .count(
                           shrinkWrap:
-                          true,
+                              true,
                           physics:
-                          const NeverScrollableScrollPhysics(),
+                              const NeverScrollableScrollPhysics(),
                           crossAxisCount:
-                          2,
+                              2,
                           crossAxisSpacing:
-                          12,
+                              12,
                           mainAxisSpacing:
-                          12,
+                              12,
                           childAspectRatio:
-                          1.5,
+                              1.5,
                           children: [
                             StatCard(
                                 icon: Icons.menu_book_outlined,
@@ -474,7 +592,7 @@ class _DashboardState
                         ),
                         const SizedBox(
                             height:
-                            20),
+                                20),
 
                         // Today's classes
                         Text(
@@ -485,16 +603,16 @@ class _DashboardState
                                 color: txt)),
                         const SizedBox(
                             height:
-                            12),
+                                12),
                         _ClassCard(
                             title:
-                            'Advanced Web Development',
+                                'Advanced Web Development',
                             location:
-                            'Tech Building 201',
+                                'Tech Building 201',
                             time:
-                            '09:00 AM',
+                                '09:00 AM',
                             badge:
-                            'Starting Soon',
+                                'Starting Soon',
                             badgeColor: AppTheme
                                 .primary,
                             iconBg: AppTheme
@@ -502,48 +620,48 @@ class _DashboardState
                             iconColor: AppTheme
                                 .primary,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            8),
+                                8),
                         _ClassCard(
                             title:
-                            'Database Systems',
+                                'Database Systems',
                             location:
-                            'Tech Building 305',
+                                'Tech Building 305',
                             time:
-                            '11:00 AM',
+                                '11:00 AM',
                             iconBg: const Color(
                                 0xFFF3F4F6),
                             iconColor: AppTheme
                                 .textSecondary,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            8),
+                                8),
                         _ClassCard(
                             title:
-                            'Machine Learning',
+                                'Machine Learning',
                             location:
-                            'AI Lab 401',
+                                'AI Lab 401',
                             time:
-                            '02:00 PM',
+                                '02:00 PM',
                             iconBg: const Color(
                                 0xFFF3F4F6),
                             iconColor: AppTheme
                                 .textSecondary,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            20),
+                                20),
 
                         // Recent grades
                         Text(
@@ -554,67 +672,67 @@ class _DashboardState
                                 color: txt)),
                         const SizedBox(
                             height:
-                            12),
+                                12),
                         _GradeCard(
                             course:
-                            'CS401',
+                                'CS401',
                             task:
-                            'Project 2',
+                                'Project 2',
                             pct:
-                            0.95,
+                                0.95,
                             grade:
-                            '95%',
+                                '95%',
                             color: AppTheme
                                 .success,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            8),
+                                8),
                         _GradeCard(
                             course:
-                            'MATH301',
+                                'MATH301',
                             task:
-                            'Midterm Exam',
+                                'Midterm Exam',
                             pct:
-                            0.88,
+                                0.88,
                             grade:
-                            '88%',
+                                '88%',
                             color: AppTheme
                                 .info,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            8),
+                                8),
                         _GradeCard(
                             course:
-                            'ENG201',
+                                'ENG201',
                             task:
-                            'Essay 1',
+                                'Essay 1',
                             pct:
-                            0.92,
+                                0.92,
                             grade:
-                            '92%',
+                                '92%',
                             color: AppTheme
                                 .success,
                             cardColor:
-                            card,
+                                card,
                             borderColor:
-                            border),
+                                border),
                         const SizedBox(
                             height:
-                            20),
+                                20),
 
                         // Pending Assignments header
                         Row(
                           mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
+                              MainAxisAlignment
+                                  .spaceBetween,
                           children: [
                             Text(
                                 'Pending Assignments',
@@ -631,31 +749,85 @@ class _DashboardState
                         ),
                         const SizedBox(
                             height:
-                            8),
+                                8),
 
                         // Pending assignment cards
                         ...[
-                          {'title': 'Web Development Project 3',  'course': 'CS401',  'due': 'Due Dec 15', 'priority': 'High Priority',   'pColor': AppTheme.primary, 'aColor': AppTheme.primary},
-                          {'title': 'Linear Algebra Problem Set', 'course': 'MATH301','due': 'Due Dec 18', 'priority': 'Medium Priority', 'pColor': AppTheme.warning, 'aColor': AppTheme.warning},
-                          {'title': 'Technical Writing Essay',    'course': 'ENG201', 'due': 'Due Dec 20', 'priority': 'Medium Priority', 'pColor': AppTheme.warning, 'aColor': AppTheme.warning},
-                          {'title': 'Database Design Project',    'course': 'CS402',  'due': 'Due Dec 22', 'priority': 'Low Priority',    'pColor': AppTheme.success, 'aColor': AppTheme.orange},
-                        ].expand((item) => [
-                          _SimplePendingCard(
-                            title:         item['title'] as String,
-                            course:        item['course'] as String,
-                            dueDate:       item['due'] as String,
-                            priority:      item['priority'] as String,
-                            priorityColor: item['pColor'] as Color,
-                            accentColor:   item['aColor'] as Color,
-                            cardColor:     card,
-                            borderColor:   border,
-                          ),
-                          const SizedBox(height: 8),
-                        ]),
+                          {
+                            'title':
+                                'Web Development Project 3',
+                            'course':
+                                'CS401',
+                            'due':
+                                'Due Dec 15',
+                            'priority':
+                                'High Priority',
+                            'pColor':
+                                AppTheme.primary,
+                            'aColor':
+                                AppTheme.primary
+                          },
+                          {
+                            'title':
+                                'Linear Algebra Problem Set',
+                            'course':
+                                'MATH301',
+                            'due':
+                                'Due Dec 18',
+                            'priority':
+                                'Medium Priority',
+                            'pColor':
+                                AppTheme.warning,
+                            'aColor':
+                                AppTheme.warning
+                          },
+                          {
+                            'title':
+                                'Technical Writing Essay',
+                            'course':
+                                'ENG201',
+                            'due':
+                                'Due Dec 20',
+                            'priority':
+                                'Medium Priority',
+                            'pColor':
+                                AppTheme.warning,
+                            'aColor':
+                                AppTheme.warning
+                          },
+                          {
+                            'title':
+                                'Database Design Project',
+                            'course':
+                                'CS402',
+                            'due':
+                                'Due Dec 22',
+                            'priority':
+                                'Low Priority',
+                            'pColor':
+                                AppTheme.success,
+                            'aColor':
+                                AppTheme.orange
+                          },
+                        ].expand(
+                            (item) =>
+                                [
+                                  _SimplePendingCard(
+                                    title: item['title'] as String,
+                                    course: item['course'] as String,
+                                    dueDate: item['due'] as String,
+                                    priority: item['priority'] as String,
+                                    priorityColor: item['pColor'] as Color,
+                                    accentColor: item['aColor'] as Color,
+                                    cardColor: card,
+                                    borderColor: border,
+                                  ),
+                                  const SizedBox(height: 8),
+                                ]),
 
                         const SizedBox(
                             height:
-                            20),
+                                20),
 
                         // Quick Actions
                         Text(
@@ -666,7 +838,7 @@ class _DashboardState
                                 color: txt)),
                         const SizedBox(
                             height:
-                            12),
+                                12),
                         Row(
                             children: [
                               Expanded(
@@ -678,7 +850,7 @@ class _DashboardState
                             ]),
                         const SizedBox(
                             height:
-                            8),
+                                8),
                         Row(
                             children: [
                               Expanded(
@@ -690,7 +862,7 @@ class _DashboardState
                             ]),
                         const SizedBox(
                             height:
-                            24),
+                                24),
                       ],
                     ),
                   ),
@@ -704,8 +876,8 @@ class _DashboardState
             GestureDetector(
                 onTap: () =>
                     setState(() =>
-                    _showNotif =
-                    false),
+                        _showNotif =
+                            false),
                 child: Container(
                     color: Colors
                         .black38)),
@@ -714,34 +886,34 @@ class _DashboardState
           if (_showNotif)
             Positioned(
               top: MediaQuery.of(
-                  context)
-                  .padding
-                  .top +
+                          context)
+                      .padding
+                      .top +
                   kToolbarHeight,
               right: 8,
               width: 310,
               child: Material(
                 elevation: 10,
                 borderRadius:
-                BorderRadius
-                    .circular(
-                    16),
+                    BorderRadius
+                        .circular(
+                            16),
                 color: card,
                 child: Container(
                   decoration:
-                  BoxDecoration(
+                      BoxDecoration(
                     borderRadius:
-                    BorderRadius
-                        .circular(
-                        16),
+                        BorderRadius
+                            .circular(
+                                16),
                     border: Border.all(
                         color:
-                        border),
+                            border),
                   ),
                   child: Column(
                     mainAxisSize:
-                    MainAxisSize
-                        .min,
+                        MainAxisSize
+                            .min,
                     children: [
                       // panel header
                       Padding(
@@ -779,22 +951,22 @@ class _DashboardState
                               onPressed: () =>
                                   setState(() => _showNotif = false),
                               padding:
-                              EdgeInsets.zero,
+                                  EdgeInsets.zero,
                               constraints:
-                              const BoxConstraints(),
+                                  const BoxConstraints(),
                             ),
                           ],
                         ),
                       ),
                       Divider(
                           height:
-                          1,
+                              1,
                           color:
-                          border),
+                              border),
 
                       // notification rows
                       ..._notifs.map(
-                              (n) =>
+                          (n) =>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                 decoration: BoxDecoration(
@@ -844,12 +1016,12 @@ class _DashboardState
                       TextButton(
                         onPressed: () =>
                             setState(() =>
-                            _showNotif = false),
+                                _showNotif = false),
                         child:
-                        const Padding(
+                            const Padding(
                           padding: EdgeInsets.only(
                               bottom:
-                              4),
+                                  4),
                           child: Text(
                               'View All Notifications',
                               style: TextStyle(
@@ -884,26 +1056,26 @@ class _ClassCard
   final Color? badgeColor;
   const _ClassCard(
       {required this.title,
-        required this.location,
-        required this.time,
-        required this.iconBg,
-        required this.iconColor,
-        required this.cardColor,
-        required this.borderColor,
-        this.badge,
-        this.badgeColor});
+      required this.location,
+      required this.time,
+      required this.iconBg,
+      required this.iconColor,
+      required this.cardColor,
+      required this.borderColor,
+      this.badge,
+      this.badgeColor});
 
   @override
   Widget build(
       BuildContext context) {
     return Container(
       padding:
-      const EdgeInsets.all(14),
+          const EdgeInsets.all(14),
       decoration: BoxDecoration(
           color: cardColor,
           borderRadius:
-          BorderRadius
-              .circular(14),
+              BorderRadius
+                  .circular(14),
           border: Border.all(
               color: borderColor)),
       child: Row(children: [
@@ -913,9 +1085,9 @@ class _ClassCard
           decoration: BoxDecoration(
               color: iconBg,
               borderRadius:
-              BorderRadius
-                  .circular(
-                  10)),
+                  BorderRadius
+                      .circular(
+                          10)),
           child: Icon(
               Icons.access_time,
               color: iconColor,
@@ -925,14 +1097,14 @@ class _ClassCard
         Expanded(
           child: Column(
             crossAxisAlignment:
-            CrossAxisAlignment
-                .start,
+                CrossAxisAlignment
+                    .start,
             children: [
               Text(title,
                   style: const TextStyle(
                       fontWeight:
-                      FontWeight
-                          .w600,
+                          FontWeight
+                              .w600,
                       fontSize: 14,
                       color: AppTheme
                           .textPrimary)),
@@ -948,7 +1120,7 @@ class _ClassCard
                 Text(location,
                     style: const TextStyle(
                         fontSize:
-                        12,
+                            12,
                         color: AppTheme
                             .textSecondary)),
               ]),
@@ -957,14 +1129,14 @@ class _ClassCard
         ),
         Column(
             crossAxisAlignment:
-            CrossAxisAlignment
-                .end,
+                CrossAxisAlignment
+                    .end,
             children: [
               Text(time,
                   style: const TextStyle(
                       fontWeight:
-                      FontWeight
-                          .w600,
+                          FontWeight
+                              .w600,
                       fontSize: 13,
                       color: AppTheme
                           .textPrimary)),
@@ -972,12 +1144,12 @@ class _ClassCard
                 Text(badge!,
                     style: TextStyle(
                         fontSize:
-                        11,
+                            11,
                         color:
-                        badgeColor,
+                            badgeColor,
                         fontWeight:
-                        FontWeight
-                            .w500)),
+                            FontWeight
+                                .w500)),
             ]),
       ]),
     );
@@ -993,58 +1165,58 @@ class _GradeCard
       borderColor;
   const _GradeCard(
       {required this.course,
-        required this.task,
-        required this.pct,
-        required this.grade,
-        required this.color,
-        required this.cardColor,
-        required this.borderColor});
+      required this.task,
+      required this.pct,
+      required this.grade,
+      required this.color,
+      required this.cardColor,
+      required this.borderColor});
 
   @override
   Widget build(
       BuildContext context) {
     return Container(
       padding:
-      const EdgeInsets.all(14),
+          const EdgeInsets.all(14),
       decoration: BoxDecoration(
           color: cardColor,
           borderRadius:
-          BorderRadius
-              .circular(14),
+              BorderRadius
+                  .circular(14),
           border: Border.all(
               color: borderColor)),
       child: Column(children: [
         Row(
           mainAxisAlignment:
-          MainAxisAlignment
-              .spaceBetween,
+              MainAxisAlignment
+                  .spaceBetween,
           children: [
             Column(
                 crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   Text(course,
                       style: const TextStyle(
                           fontWeight:
-                          FontWeight
-                              .w700,
+                              FontWeight
+                                  .w700,
                           fontSize:
-                          14,
+                              14,
                           color: AppTheme
                               .textPrimary)),
                   Text(task,
                       style: const TextStyle(
                           fontSize:
-                          12,
+                              12,
                           color: AppTheme
                               .textSecondary)),
                 ]),
             Text(grade,
                 style: TextStyle(
                     fontWeight:
-                    FontWeight
-                        .w700,
+                        FontWeight
+                            .w700,
                     fontSize: 18,
                     color: color)),
           ],
@@ -1052,17 +1224,17 @@ class _GradeCard
         const SizedBox(height: 10),
         ClipRRect(
           borderRadius:
-          BorderRadius
-              .circular(4),
+              BorderRadius
+                  .circular(4),
           child:
-          LinearProgressIndicator(
+              LinearProgressIndicator(
             value: pct,
             backgroundColor:
-            const Color(
-                0xFFE5E7EB),
+                const Color(
+                    0xFFE5E7EB),
             valueColor:
-            AlwaysStoppedAnimation<
-                Color>(color),
+                AlwaysStoppedAnimation<
+                    Color>(color),
             minHeight: 6,
           ),
         ),
@@ -1079,9 +1251,9 @@ class _ActionBtn
       txtColor;
   const _ActionBtn(
       {required this.label,
-        required this.onTap,
-        required this.borderColor,
-        required this.txtColor});
+      required this.onTap,
+      required this.borderColor,
+      required this.txtColor});
 
   @override
   Widget build(
@@ -1089,15 +1261,15 @@ class _ActionBtn
     return OutlinedButton(
       onPressed: onTap,
       style:
-      OutlinedButton.styleFrom(
+          OutlinedButton.styleFrom(
         side: BorderSide(
             color: borderColor),
         shape:
-        RoundedRectangleBorder(
-            borderRadius:
-            BorderRadius
-                .circular(
-                12)),
+            RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius
+                        .circular(
+                            12)),
         padding: const EdgeInsets
             .symmetric(
             vertical: 14),
@@ -1107,7 +1279,7 @@ class _ActionBtn
           style: TextStyle(
               fontSize: 13,
               fontWeight:
-              FontWeight.w500,
+                  FontWeight.w500,
               color: txtColor)),
     );
   }
@@ -1136,58 +1308,85 @@ class _SimplePendingCard
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius:
+          BorderRadius.circular(
+              12),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: borderColor),
+          borderRadius:
+              BorderRadius
+                  .circular(12),
         ),
         child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment
+                    .stretch,
             children: [
               // Colored left accent strip
-              Container(width: 4, color: accentColor),
+              Container(
+                  width: 4,
+                  color:
+                      accentColor),
 
               // Card content
               Expanded(
                 child: Container(
                   color: cardColor,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                  padding:
+                      const EdgeInsets
+                          .symmetric(
+                          horizontal:
+                              14,
+                          vertical:
+                              12),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child:
+                            Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
                           children: [
-                            Text(title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    color: AppTheme.textPrimary)),
-                            const SizedBox(height: 2),
-                            Text(course,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.textSecondary)),
+                            Text(
+                                title,
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary)),
+                            const SizedBox(
+                                height: 2),
+                            Text(
+                                course,
+                                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(
+                          width:
+                              10),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment:
+                            CrossAxisAlignment
+                                .end,
                         children: [
-                          Text(dueDate,
+                          Text(
+                              dueDate,
                               style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.textPrimary)),
-                          const SizedBox(height: 2),
-                          Text(priority,
+                          const SizedBox(
+                              height:
+                                  2),
+                          Text(
+                              priority,
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,

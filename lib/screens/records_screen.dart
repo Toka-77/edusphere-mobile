@@ -9,20 +9,35 @@ class RecordsScreen
   @override
   Widget build(
       BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
-    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
-    final card = isDark ? AppTheme.darkCard : Colors.white;
-    final bg = isDark ? AppTheme.darkBg : AppTheme.background;
-    final brd = isDark ? AppTheme.darkBorder : AppTheme.border;
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
+    final txt = isDark
+        ? AppTheme.darkText
+        : AppTheme.textPrimary;
+    final txtSec = isDark
+        ? AppTheme.darkTextSec
+        : AppTheme.textSecondary;
+    final card = isDark
+        ? AppTheme.darkCard
+        : Colors.white;
+    final bg = isDark
+        ? AppTheme.darkBg
+        : AppTheme.background;
+    final brd = isDark
+        ? AppTheme.darkBorder
+        : AppTheme.border;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: card,
         leading: IconButton(
-          icon: Icon(Icons.menu, color: txt),
-          onPressed: HomeScreen.openDrawer,
+          icon: Icon(Icons.menu,
+              color: txt),
+          onPressed: HomeScreen
+              .openDrawer,
         ),
         title: Column(
           crossAxisAlignment:
@@ -41,7 +56,8 @@ class RecordsScreen
                 'Your official academic record and status',
                 style: TextStyle(
                     fontSize: 11,
-                    color: txtSec)),
+                    color:
+                        txtSec)),
           ],
         ),
       ),
@@ -69,7 +85,9 @@ class RecordsScreen
                   BoxShadow(
                     color: Colors
                         .black
-                        .withValues(alpha: 0.05),
+                        .withValues(
+                            alpha:
+                                0.05),
                     blurRadius: 10,
                     offset:
                         const Offset(
@@ -108,13 +126,15 @@ class RecordsScreen
                           fontWeight:
                               FontWeight
                                   .w700,
-                          color: txt)),
+                          color:
+                              txt)),
                   Text(
                       'ID: 224052',
                       style: TextStyle(
                           fontSize:
                               13,
-                          color: txtSec,
+                          color:
+                              txtSec,
                           fontWeight:
                               FontWeight
                                   .w500)),
@@ -166,7 +186,9 @@ class RecordsScreen
                         BoxDecoration(
                       color: AppTheme
                           .success
-                          .withValues(alpha: 0.1),
+                          .withValues(
+                              alpha:
+                                  0.1),
                       borderRadius:
                           BorderRadius
                               .circular(
@@ -174,10 +196,10 @@ class RecordsScreen
                       border: Border.all(
                           color: AppTheme
                               .success
-                              .withValues(alpha: 0.3)),
+                              .withValues(
+                                  alpha: 0.3)),
                     ),
-                    child:
-                        Row(
+                    child: Row(
                       mainAxisAlignment:
                           MainAxisAlignment
                               .spaceBetween,
@@ -476,10 +498,19 @@ class _InfoTile
   @override
   Widget build(
       BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
-    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
-    final tileBg = isDark ? AppTheme.darkBg2 : AppTheme.background;
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
+    final txt = isDark
+        ? AppTheme.darkText
+        : AppTheme.textPrimary;
+    final txtSec = isDark
+        ? AppTheme.darkTextSec
+        : AppTheme.textSecondary;
+    final tileBg = isDark
+        ? AppTheme.darkBg2
+        : AppTheme.background;
 
     return Container(
       padding: const EdgeInsets
@@ -506,7 +537,8 @@ class _InfoTile
               Text(label,
                   style: TextStyle(
                       fontSize: 10,
-                      color: txtSec,
+                      color:
+                          txtSec,
                       fontWeight:
                           FontWeight
                               .w500)),
@@ -542,9 +574,16 @@ class _EnrollRow
   @override
   Widget build(
       BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
-    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
+    final txt = isDark
+        ? AppTheme.darkText
+        : AppTheme.textPrimary;
+    final txtSec = isDark
+        ? AppTheme.darkTextSec
+        : AppTheme.textSecondary;
 
     return Row(children: [
       Expanded(
@@ -564,7 +603,8 @@ class _EnrollRow
               Text(code,
                   style: TextStyle(
                       fontSize: 11,
-                      color: txtSec)),
+                      color:
+                          txtSec)),
             ]),
       ),
       Text(credits,
@@ -578,8 +618,9 @@ class _EnrollRow
             horizontal: 8,
             vertical: 3),
         decoration: BoxDecoration(
-          color: typeColor
-              .withValues(alpha: 0.1),
+          color:
+              typeColor.withValues(
+                  alpha: 0.1),
           borderRadius:
               BorderRadius
                   .circular(6),
@@ -625,47 +666,85 @@ class _MilestoneCard
       required this.borderColor});
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
-    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
-    final cardBg = isDark ? AppTheme.darkCard : Colors.white;
-    final brd = isDark ? AppTheme.darkBorder : AppTheme.border;
+  Widget build(
+      BuildContext context) {
+    final isDark =
+        Theme.of(context)
+                .brightness ==
+            Brightness.dark;
+    final txt = isDark
+        ? AppTheme.darkText
+        : AppTheme.textPrimary;
+    final txtSec = isDark
+        ? AppTheme.darkTextSec
+        : AppTheme.textSecondary;
+    final cardBg = isDark
+        ? AppTheme.darkCard
+        : Colors.white;
+    final brd = isDark
+        ? AppTheme.darkBorder
+        : AppTheme.border;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius:
+          BorderRadius.circular(
+              12),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: brd),
-          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: brd),
+          borderRadius:
+              BorderRadius
+                  .circular(12),
         ),
         child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment
+                    .stretch,
             children: [
-              Container(width: 3, color: borderColor),
+              Container(
+                  width: 3,
+                  color:
+                      borderColor),
               Expanded(
                 child: Container(
                   color: cardBg,
-                  padding: const EdgeInsets.all(14),
+                  padding:
+                      const EdgeInsets
+                          .all(14),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
                     children: [
                       Text(title,
                           style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: txt)),
-                      const SizedBox(height: 4),
+                              fontWeight: FontWeight
+                                  .w600,
+                              fontSize:
+                                  13,
+                              color:
+                                  txt)),
+                      const SizedBox(
+                          height:
+                              4),
                       Text(date,
                           style: TextStyle(
-                              fontSize: 11,
-                              color: txtSec)),
-                      const SizedBox(height: 6),
+                              fontSize:
+                                  11,
+                              color:
+                                  txtSec)),
+                      const SizedBox(
+                          height:
+                              6),
                       Text(status,
                           style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: statusColor)),
+                              fontSize:
+                                  11,
+                              fontWeight: FontWeight
+                                  .w700,
+                              color:
+                                  statusColor)),
                     ],
                   ),
                 ),
