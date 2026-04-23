@@ -467,7 +467,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               radius: 17,
               backgroundColor: AppTheme.primaryLight,
               child: Text(
-                'RA',
+                'TK',
                 style: TextStyle(
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w700,

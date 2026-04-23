@@ -32,7 +32,7 @@ const Map<String,
     'getSupport': 'Get Support',
     // Dashboard
     'welcomeBack': 'Welcome back,',
-    'welcomeName': 'Rawda Ayman! 👋',
+    'welcomeName': 'TOKA KHALED! 👋',
     'welcomeSub': "Here's what's happening with your classes today.",
     'totalCourses':
         'Total Courses',

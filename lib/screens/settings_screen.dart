@@ -33,15 +33,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pwSaved = false;
 
   // Profile fields
-  final _fullNameController = TextEditingController(text: 'Rawda Ayman');
+  final _fullNameController = TextEditingController(text: 'TOKA KHALED');
   final _studentIdController = TextEditingController(text: '21at41');
   final _emailFieldController =
-  TextEditingController(text: 'rawda@edusphere.edu');
+      TextEditingController(text: 'toka@edusphere.edu');
   final _phoneController = TextEditingController(text: '+20 100 000 0000');
   final _facultyController =
-  TextEditingController(text: 'Engineering & Technology');
+      TextEditingController(text: 'Engineering & Technology');
   final _programController =
-  TextEditingController(text: 'B.Sc. Computer Science');
+      TextEditingController(text: 'B.Sc. Computer Science');
 
   // Active sessions
   final List<Map<String, dynamic>> _sessions = [
@@ -89,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (_) => false,
+      (_) => false,
     );
   }
 
@@ -98,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _newPwController.text == _confPwController.text) {
       setState(() => _pwSaved = true);
       Future.delayed(const Duration(seconds: 3),
-              () => mounted ? setState(() => _pwSaved = false) : null);
+          () => mounted ? setState(() => _pwSaved = false) : null);
       _oldPwController.clear();
       _newPwController.clear();
       _confPwController.clear();
@@ -134,13 +134,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: cardColor,
         leading: Navigator.canPop(context)
             ? IconButton(
-          icon: Icon(Icons.arrow_back, color: txtColor),
-          onPressed: () => Navigator.pop(context),
-        )
+                icon: Icon(Icons.arrow_back, color: txtColor),
+                onPressed: () => Navigator.pop(context),
+              )
             : IconButton(
-          icon: Icon(Icons.menu, color: txtColor),
-          onPressed: HomeScreen.openDrawer,
-        ),
+                icon: Icon(Icons.menu, color: txtColor),
+                onPressed: HomeScreen.openDrawer,
+              ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -286,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: Text('RA',
+                  child: Text('TK',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -297,12 +297,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Rawda Ayman',
+                  Text('TOKA KHALED',
                       style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                           color: txtColor)),
-                  Text('rawda@edusphere.edu',
+                  Text('toka@edusphere.edu',
                       style: TextStyle(fontSize: 12, color: txtSec)),
                 ],
               ),
@@ -347,7 +347,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const SizedBox(height: 16),
-          // No Save Changes button — profile is read-only (managed by university)
         ],
       ),
     );
@@ -369,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           filled: true,
           fillColor: cardColor,
           contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: borderColor),
@@ -417,8 +416,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontWeight: FontWeight.w700,
                       color: txtColor)),
               const SizedBox(height: 4),
-              Text(
-                  'Update your account password regularly to keep it secure.',
+              Text('Update your account password regularly to keep it secure.',
                   style: TextStyle(fontSize: 12, color: txtSec)),
               const SizedBox(height: 16),
               _secField('Current Password', _oldPwController, txtColor, txtSec,
@@ -478,8 +476,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Manage devices that are currently signed in to your account.',
                   style: TextStyle(fontSize: 12, color: txtSec)),
               const SizedBox(height: 14),
-              ..._sessions.map((s) => _sessionRow(
-                  s, txtColor, txtSec, cardColor, borderColor)),
+              ..._sessions
+                  .map((s) => _sessionRow(s, txtColor, txtSec, cardColor, borderColor)),
             ],
           ),
         ),
@@ -551,11 +549,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               hintText: '••••••••',
               hintStyle: TextStyle(color: txtSec),
               prefixIcon:
-              const Icon(Icons.vpn_key, color: AppTheme.primary, size: 18),
+                  const Icon(Icons.vpn_key, color: AppTheme.primary, size: 18),
               filled: true,
               fillColor: cardColor,
               contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: borderColor),
@@ -567,7 +565,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide:
-                const BorderSide(color: AppTheme.primary, width: 2),
+                    const BorderSide(color: AppTheme.primary, width: 2),
               ),
             ),
           ),
@@ -582,7 +580,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: borderColor.withValues(alpha: 0.5))),
+        border: Border(
+            bottom: BorderSide(color: borderColor.withValues(alpha: 0.5))),
       ),
       child: Row(
         children: [
@@ -604,7 +603,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           if (isCurrent)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFF00E676).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -622,12 +622,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 foregroundColor: AppTheme.primary,
                 side: const BorderSide(color: AppTheme.primary),
                 padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Revoke',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                  style:
+                      TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             ),
         ],
       ),
@@ -721,7 +722,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Theme
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -833,20 +833,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
               child: Container(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color:
-                    isSelected ? AppTheme.primary : borderColor,
+                    color: isSelected ? AppTheme.primary : borderColor,
                     width: isSelected ? 2 : 1,
                   ),
                 ),
                 child: Row(
                   children: [
-                    Text(lang['flag']!,
-                        style: const TextStyle(fontSize: 24)),
+                    Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(lang['label']!,
@@ -903,14 +901,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontWeight: FontWeight.w700,
                   color: txtColor)),
           const SizedBox(height: 14),
-          GridView.count(
-            crossAxisCount: 2,
+          // ── FIX: replaced childAspectRatio with mainAxisExtent ──
+          GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            children: items.map((item) {
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              mainAxisExtent: 72,
+            ),
+            itemCount: items.length,
+            itemBuilder: (_, i) {
+              final item = items[i];
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -928,15 +931,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             color: txtSec,
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
-                    Text(item[1] as String,
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: item[2] as Color)),
+                    Text(
+                      item[1] as String,
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: item[2] as Color),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               );
-            }).toList(),
+            },
           ),
         ],
       ),
@@ -961,7 +967,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         border: showBorder
             ? Border(
-            bottom: BorderSide(color: borderColor.withValues(alpha: 0.5)))
+                bottom:
+                    BorderSide(color: borderColor.withValues(alpha: 0.5)))
             : null,
       ),
       child: Row(

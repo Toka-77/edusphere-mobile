@@ -8,7 +8,6 @@ import 'curriculum_screen.dart';
 import 'records_screen.dart';
 import 'settings_screen.dart';
 import 'chatbot_screen.dart';
-import 'admin_panel_screen.dart';
 import 'grades_screen.dart';
 import 'timetable_screen.dart';
 import 'add_drop_screen.dart';
@@ -53,6 +52,186 @@ class _HomeScreenState extends State<HomeScreen> {
   void _pushScreen(Widget screen) {
     Navigator.pop(context);
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
+  void _showSupportDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final card = isDark ? AppTheme.darkCard : Colors.white;
+    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+    final border = isDark ? AppTheme.darkBorder : AppTheme.border;
+
+    String selectedType = 'Technical';
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setS) => Dialog(
+          backgroundColor: card,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              24,
+              24,
+              MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Header ──────────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🎓 Get Support',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: txt,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'EduSphere IT & Academic Support',
+                              style: TextStyle(fontSize: 12, color: txtSec),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: txtSec, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Issue Type ───────────────────────────────────
+                  Text(
+                    'ISSUE TYPE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: txtSec,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ['Technical', 'Academic', 'Other'].map((type) {
+                      final isSelected = selectedType == type;
+                      return GestureDetector(
+                        onTap: () => setS(() => selectedType = type),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppTheme.primary : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? AppTheme.primary : border,
+                            ),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? Colors.white : txt,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Description ──────────────────────────────────
+                  Text(
+                    'DESCRIBE YOUR ISSUE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: txtSec,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controller,
+                    maxLines: 4,
+                    style: TextStyle(fontSize: 13, color: txt),
+                    decoration: InputDecoration(
+                      hintText: 'Describe your problem...',
+                      hintStyle: TextStyle(color: txtSec, fontSize: 13),
+                      filled: true,
+                      fillColor: isDark
+                          ? const Color(0xFF1A1D2E)
+                          : const Color(0xFFF8F9FA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: AppTheme.primary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Submit Button ────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✅ Ticket submitted successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '📤 Submit Ticket',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showLogoutDialog() {
@@ -232,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: const Center(
-                            child: Text('RA',
+                            child: Text('TK',
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 14,
@@ -245,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Rawda Ayman',
+                                'TOKA KHALED',
                                 style: TextStyle(
                                   color: isDark
                                       ? AppTheme.darkText
@@ -255,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                'rawda@edusphere.edu',
+                                'toka@edusphere.edu',
                                 style: TextStyle(
                                   color: isDark
                                       ? AppTheme.darkTextLight
@@ -364,13 +543,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () => _pushScreen(const ChatbotScreen()),
                       ),
                       _DrawerItem(
-                        icon: Icons.admin_panel_settings_outlined,
-                        label: t('adminPanel'),
-                        selected: false,
-                        isDark: isDark,
-                        onTap: () => _pushScreen(const AdminPanelScreen()),
-                      ),
-                      _DrawerItem(
                         icon: Icons.settings_outlined,
                         label: t('settings'),
                         selected: false,
@@ -384,7 +556,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            // Web: rgba(244,67,54,0.1) bg + rgba(244,67,54,0.15) border
                             color: AppTheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
@@ -418,7 +589,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: _showSupportDialog,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppTheme.primary,
                                     padding: const EdgeInsets.symmetric(
@@ -535,8 +706,6 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Active: red gradient bg + white text + white dot (matches web)
-    // Inactive: transparent + theme text color
     final Color iconColor = isLogout
         ? AppTheme.primary
         : selected
@@ -556,7 +725,6 @@ class _DrawerItem extends StatelessWidget {
           padding:
           const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            // Web: active = linear-gradient(135deg,#f44336,#b71c1c)
             gradient: selected ? AppTheme.redGradient : null,
             borderRadius: BorderRadius.circular(10),
             color: selected ? null : Colors.transparent,
@@ -594,7 +762,7 @@ class _DrawerItem extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.w800)),
                 ),
-              // White dot for active (matches web nav-item-active white dot)
+              // White dot for active
               if (selected)
                 Container(
                   width: 6,

@@ -6,10 +6,8 @@ import 'complaints_screen.dart';
 import 'academic_warnings_screen.dart';
 import 'official_requests_screen.dart';
 
-class StudentServicesScreen
-    extends StatelessWidget {
-  const StudentServicesScreen(
-      {super.key});
+class StudentServicesScreen extends StatelessWidget {
+  const StudentServicesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +16,8 @@ class StudentServicesScreen
     final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
     final card = isDark ? AppTheme.darkCard : Colors.white;
+    final border = isDark ? AppTheme.darkBorder : AppTheme.border;
+
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -30,16 +30,15 @@ class StudentServicesScreen
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Student Services',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
             Text('Manage your academic requests & needs',
                 style: TextStyle(fontSize: 11, color: txtSec)),
           ],
         ),
       ),
       body: SingleChildScrollView(
-        padding:
-        const EdgeInsets.all(
-            16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             GridView.count(
@@ -104,62 +103,8 @@ class StudentServicesScreen
                 ),
               ],
             ),
-            const SizedBox(
-                height: 16),
-            Container(
-              padding:
-              const EdgeInsets
-                  .all(20),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCard : AppTheme.primaryLight,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-                      children: [
-                        Text(
-                            "Can't find what you're looking for?",
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: txt)),
-                        const SizedBox(
-                            height:
-                            4),
-                        Text(
-                            'Our student affairs office is ready to help you.',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: txtSec)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                      width: 12),
-                  ElevatedButton(
-                    onPressed:
-                        () {},
-                    style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets
-                            .symmetric(
-                            horizontal:
-                            12,
-                            vertical:
-                            10)),
-                    child: const Text(
-                        'Contact',
-                        style: TextStyle(
-                            fontSize:
-                            12)),
-                  ),
-                ],
-              ),
-            ),
+
+          
           ],
         ),
       ),
@@ -172,13 +117,15 @@ class _ServiceCard extends StatelessWidget {
   final Color iconColor, iconBg;
   final String title, description;
   final VoidCallback onTap;
-  const _ServiceCard(
-      {required this.icon,
-        required this.iconColor,
-        required this.iconBg,
-        required this.title,
-        required this.description,
-        required this.onTap});
+
+  const _ServiceCard({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +134,7 @@ class _ServiceCard extends StatelessWidget {
     final border = isDark ? AppTheme.darkBorder : AppTheme.border;
     final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -209,9 +157,7 @@ class _ServiceCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(title,
                 style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    color: txt)),
+                    fontWeight: FontWeight.w700, fontSize: 14, color: txt)),
             const SizedBox(height: 4),
             Expanded(
               child: Text(description,

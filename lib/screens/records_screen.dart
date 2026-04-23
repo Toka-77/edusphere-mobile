@@ -119,7 +119,7 @@ class RecordsScreen
                   const SizedBox(
                       height: 12),
                   Text(
-                      'Rawda Ayman',
+                      'TOKA KHALED',
                       style: TextStyle(
                           fontSize:
                           20,

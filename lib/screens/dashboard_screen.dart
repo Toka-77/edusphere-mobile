@@ -217,7 +217,6 @@ class _DashboardState extends State<DashboardScreen>
           {'label': 'Student Services', 'icon': '👥', 'desc': 'Medical, complaints'},
           {'label': 'Curriculum', 'icon': '📚', 'desc': 'Course plan'},
           {'label': 'Records', 'icon': '📄', 'desc': 'Academic records'},
-          {'label': 'Admin Panel', 'icon': '🛡️', 'desc': 'Administration'},
           {'label': 'AI Assistant', 'icon': '🤖', 'desc': 'Chat with AI'},
           {'label': 'Settings', 'icon': '⚙️', 'desc': 'Preferences'},
         ];
@@ -426,7 +425,7 @@ class _DashboardState extends State<DashboardScreen>
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Rawda Ayman',
+                                  Text('TOKA KHALED',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700, color: txt)),
                                   Text('ID: 21at41',
@@ -452,7 +451,7 @@ class _DashboardState extends State<DashboardScreen>
                             shape: BoxShape.circle,
                           ),
                           child: const Center(
-                            child: Text('RA',
+                            child: Text('TK',
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -480,7 +479,7 @@ class _DashboardState extends State<DashboardScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Welcome back, Rawda Ayman 👋',
+                                    'Welcome back, TOKA KHALED 👋',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
