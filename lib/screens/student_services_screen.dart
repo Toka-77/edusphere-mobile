@@ -38,94 +38,69 @@ class StudentServicesScreen
       ),
       body: SingleChildScrollView(
         padding:
-            const EdgeInsets.all(
-                16),
+        const EdgeInsets.all(
+            16),
         child: Column(
           children: [
             GridView.count(
               shrinkWrap: true,
-              physics:
-                  const NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio:
-                  1.1,
+              childAspectRatio: 1.1,
               children: [
+                // Medical — web: #26c6da (cyan)
                 _ServiceCard(
-                  icon: Icons
-                      .medical_services_outlined,
-                  iconColor:
-                      AppTheme
-                          .info,
-                  iconBg: const Color(
-                      0xFFEFF6FF),
-                  title:
-                      'Medical Excuse',
+                  icon: Icons.medical_services_outlined,
+                  iconColor: const Color(0xFF26C6DA),
+                  iconBg: const Color(0xFF26C6DA).withValues(alpha: 0.12),
+                  title: 'Medical Excuse',
                   description:
-                      'Submit and track your medical excuses for missed classes.',
+                  'Submit and track your medical excuses for missed classes.',
                   onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder:
-                              (_) =>
-                                  const MedicalExcusesScreen())),
+                          builder: (_) => const MedicalExcusesScreen())),
                 ),
+                // Complaints — web: #ff9100 (orange)
                 _ServiceCard(
-                  icon: Icons
-                      .feedback_outlined,
-                  iconColor:
-                      AppTheme
-                          .warning,
-                  iconBg: const Color(
-                      0xFFFFFBEB),
-                  title:
-                      'Complaints',
+                  icon: Icons.feedback_outlined,
+                  iconColor: const Color(0xFFFF9100),
+                  iconBg: const Color(0xFFFF9100).withValues(alpha: 0.12),
+                  title: 'Complaints',
                   description:
-                      'Submit academic or general complaints to the administration.',
+                  'Submit academic or general complaints to the administration.',
                   onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder:
-                              (_) =>
-                                  const ComplaintsScreen())),
+                          builder: (_) => const ComplaintsScreen())),
                 ),
+                // Warning — web: #ffd600 (yellow)
                 _ServiceCard(
-                  icon: Icons
-                      .warning_amber_outlined,
-                  iconColor:
-                      AppTheme
-                          .orange,
-                  iconBg: const Color(
-                      0xFFFFF7ED),
+                  icon: Icons.warning_amber_outlined,
+                  iconColor: const Color(0xFFFFD600),
+                  iconBg: const Color(0xFFFFD600).withValues(alpha: 0.12),
                   title: 'Warning',
                   description:
-                      'View any academic warnings or attendance notifications.',
+                  'View any academic warnings or attendance notifications.',
                   onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder:
-                              (_) =>
-                                  const AcademicWarningsScreen())),
+                          builder: (_) => const AcademicWarningsScreen())),
                 ),
+                // Requests — web: #aa00ff (purple)
                 _ServiceCard(
-                  icon: Icons
-                      .help_outline,
-                  iconColor:
-                      AppTheme
-                          .purple,
-                  iconBg: const Color(
-                      0xFFF5F3FF),
-                  title:
-                      'Requests',
+                  icon: Icons.help_outline,
+                  iconColor: const Color(0xFFAA00FF),
+                  iconBg: const Color(0xFFAA00FF).withValues(alpha: 0.12),
+                  title: 'Requests',
                   description:
-                      'Submit general requests for certificates and documents.',
+                  'Submit general requests for certificates and documents.',
                   onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder:
-                              (_) =>
-                                  const OfficialRequestsScreen())),
+                          builder: (_) => const OfficialRequestsScreen())),
                 ),
               ],
             ),
@@ -133,24 +108,19 @@ class StudentServicesScreen
                 height: 16),
             Container(
               padding:
-                  const EdgeInsets
-                      .all(20),
-              decoration:
-                  BoxDecoration(
-                color: AppTheme
-                    .primaryLight,
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            16),
+              const EdgeInsets
+                  .all(20),
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.darkCard : AppTheme.primaryLight,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                      CrossAxisAlignment
+                          .start,
                       children: [
                         Text(
                             "Can't find what you're looking for?",
@@ -160,7 +130,7 @@ class StudentServicesScreen
                                 color: txt)),
                         const SizedBox(
                             height:
-                                4),
+                            4),
                         Text(
                             'Our student affairs office is ready to help you.',
                             style: TextStyle(
@@ -178,14 +148,14 @@ class StudentServicesScreen
                         padding: const EdgeInsets
                             .symmetric(
                             horizontal:
-                                12,
+                            12,
                             vertical:
-                                10)),
+                            10)),
                     child: const Text(
                         'Contact',
                         style: TextStyle(
                             fontSize:
-                                12)),
+                            12)),
                   ),
                 ],
               ),
@@ -204,11 +174,11 @@ class _ServiceCard extends StatelessWidget {
   final VoidCallback onTap;
   const _ServiceCard(
       {required this.icon,
-      required this.iconColor,
-      required this.iconBg,
-      required this.title,
-      required this.description,
-      required this.onTap});
+        required this.iconColor,
+        required this.iconBg,
+        required this.title,
+        required this.description,
+        required this.onTap});
 
   @override
   Widget build(BuildContext context) {

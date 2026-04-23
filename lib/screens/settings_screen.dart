@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_theme.dart';
-import '../theme_provider.dart';
 import '../locale_provider.dart';
-import 'change_password_screen.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 
@@ -35,15 +33,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pwSaved = false;
 
   // Profile fields
-  final _fullNameController = TextEditingController(text: 'Toka Khaled');
-  final _studentIdController = TextEditingController(text: '224052');
+  final _fullNameController = TextEditingController(text: 'Rawda Ayman');
+  final _studentIdController = TextEditingController(text: '21at41');
   final _emailFieldController =
-      TextEditingController(text: 'Toka@edusphere.edu');
+  TextEditingController(text: 'rawda@edusphere.edu');
   final _phoneController = TextEditingController(text: '+20 100 000 0000');
   final _facultyController =
-      TextEditingController(text: 'Business Technology');
+  TextEditingController(text: 'Engineering & Technology');
   final _programController =
-      TextEditingController(text: 'B.Sc. Management Information Systems');
+  TextEditingController(text: 'B.Sc. Computer Science');
 
   // Active sessions
   final List<Map<String, dynamic>> _sessions = [
@@ -69,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'standing': 'Good Standing',
     'advisor': 'Dr. Ahmed Hassan',
     'gradDate': 'June 2026',
-    'major': 'Business Technology',
+    'major': 'Computer Science',
     'minor': 'Mathematics',
   };
 
@@ -91,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
+          (_) => false,
     );
   }
 
@@ -100,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _newPwController.text == _confPwController.text) {
       setState(() => _pwSaved = true);
       Future.delayed(const Duration(seconds: 3),
-          () => mounted ? setState(() => _pwSaved = false) : null);
+              () => mounted ? setState(() => _pwSaved = false) : null);
       _oldPwController.clear();
       _newPwController.clear();
       _confPwController.clear();
@@ -134,7 +132,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: cardColor,
-        leading: IconButton(
+        leading: Navigator.canPop(context)
+            ? IconButton(
+          icon: Icon(Icons.arrow_back, color: txtColor),
+          onPressed: () => Navigator.pop(context),
+        )
+            : IconButton(
           icon: Icon(Icons.menu, color: txtColor),
           onPressed: HomeScreen.openDrawer,
         ),
@@ -294,12 +297,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Toka Khaled',
+                  Text('Rawda Ayman',
                       style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                           color: txtColor)),
-                  Text('Toka.Khaled@edusphere.edu',
+                  Text('rawda@edusphere.edu',
                       style: TextStyle(fontSize: 12, color: txtSec)),
                 ],
               ),
@@ -307,51 +310,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Profile fields in grid
+          // Profile fields - read only (managed by university)
           ..._profileField('Full Name', _fullNameController, txtColor, txtSec,
-              cardColor, borderColor),
+              cardColor, borderColor, readOnly: true),
           ..._profileField('Student ID', _studentIdController, txtColor,
-              txtSec, cardColor, borderColor),
+              txtSec, cardColor, borderColor, readOnly: true),
           ..._profileField('Email', _emailFieldController, txtColor, txtSec,
-              cardColor, borderColor),
+              cardColor, borderColor, readOnly: true),
           ..._profileField('Phone', _phoneController, txtColor, txtSec,
-              cardColor, borderColor),
+              cardColor, borderColor, readOnly: false),
           ..._profileField('Faculty', _facultyController, txtColor, txtSec,
-              cardColor, borderColor),
+              cardColor, borderColor, readOnly: true),
           ..._profileField('Program', _programController, txtColor, txtSec,
-              cardColor, borderColor),
+              cardColor, borderColor, readOnly: true),
 
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Profile saved successfully!'),
-                    backgroundColor: Color(0xFF00C853),
+          // Note about read-only fields
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.info.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.info.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppTheme.info, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Some fields are managed by the university and cannot be changed here.',
+                    style: TextStyle(fontSize: 12, color: txtSec),
                   ),
-                );
-              },
-              icon: const Text('💾', style: TextStyle(fontSize: 16)),
-              label: const Text('Save Changes',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700, color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
+                ),
+              ],
             ),
           ),
+
+          const SizedBox(height: 16),
+          // No Save Changes button — profile is read-only (managed by university)
         ],
       ),
     );
   }
 
   List<Widget> _profileField(String label, TextEditingController ctrl,
-      Color txtColor, Color txtSec, Color cardColor, Color borderColor) {
+      Color txtColor, Color txtSec, Color cardColor, Color borderColor,
+      {bool readOnly = false}) {
     return [
       Text(label,
           style: TextStyle(
@@ -359,12 +363,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       const SizedBox(height: 4),
       TextField(
         controller: ctrl,
-        style: TextStyle(fontSize: 14, color: txtColor),
+        readOnly: readOnly,
+        style: TextStyle(fontSize: 14, color: readOnly ? txtSec : txtColor),
         decoration: InputDecoration(
           filled: true,
           fillColor: cardColor,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: borderColor),
@@ -375,8 +380,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+            borderSide: readOnly
+                ? BorderSide(color: borderColor)
+                : const BorderSide(color: AppTheme.primary, width: 2),
           ),
+          suffixIcon: readOnly
+              ? Icon(Icons.lock_outline, size: 16, color: txtSec)
+              : null,
         ),
       ),
       const SizedBox(height: 12),
@@ -541,11 +551,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               hintText: '••••••••',
               hintStyle: TextStyle(color: txtSec),
               prefixIcon:
-                  const Icon(Icons.vpn_key, color: AppTheme.primary, size: 18),
+              const Icon(Icons.vpn_key, color: AppTheme.primary, size: 18),
               filled: true,
               fillColor: cardColor,
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: borderColor),
@@ -557,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide:
-                    const BorderSide(color: AppTheme.primary, width: 2),
+                const BorderSide(color: AppTheme.primary, width: 2),
               ),
             ),
           ),
@@ -612,7 +622,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 foregroundColor: AppTheme.primary,
                 side: const BorderSide(color: AppTheme.primary),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
@@ -746,38 +756,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderColor, txtColor),
                 ],
               ),
-              const SizedBox(height: 20),
-              Text('ACCENT COLOR',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: txtSec)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  for (final clr in [
-                    const Color(0xFFF44336),
-                    const Color(0xFF2979FF),
-                    const Color(0xFF00C853),
-                    const Color(0xFFFF9100),
-                    const Color(0xFF7C4DFF),
-                    const Color(0xFF00BCD4),
-                  ])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: clr,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: Colors.transparent, width: 2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
         ),
@@ -855,13 +833,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color:
-                        isSelected ? AppTheme.primary : borderColor,
+                    isSelected ? AppTheme.primary : borderColor,
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -983,7 +961,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         border: showBorder
             ? Border(
-                bottom: BorderSide(color: borderColor.withValues(alpha: 0.5)))
+            bottom: BorderSide(color: borderColor.withValues(alpha: 0.5)))
             : null,
       ),
       child: Row(

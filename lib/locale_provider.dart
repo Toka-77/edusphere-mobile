@@ -32,10 +32,8 @@ const Map<String,
     'getSupport': 'Get Support',
     // Dashboard
     'welcomeBack': 'Welcome back,',
-    'welcomeName':
-        'Toka Khaled! 👋',
-    'welcomeSub':
-        "Here's what's happening with your classes today.",
+    'welcomeName': 'Rawda Ayman! 👋',
+    'welcomeSub': "Here's what's happening with your classes today.",
     'totalCourses':
         'Total Courses',
     'avgGpa': 'Average GPA',
@@ -77,6 +75,13 @@ const Map<String,
     // Search
     'searchAnything':
         'Search anything...',
+    // Extra nav keys
+    'logout': 'Sign Out',
+    'grades': 'Grades',
+    'timetable': 'Timetable',
+    'addDrop': 'Add / Drop Courses',
+    'services': 'Student Services',
+    'adminPanel': 'Admin Panel',
   },
   'ar': {
     'dir': 'rtl',

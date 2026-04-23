@@ -11,7 +11,7 @@ class RecordsScreen
       BuildContext context) {
     final isDark =
         Theme.of(context)
-                .brightness ==
+            .brightness ==
             Brightness.dark;
     final txt = isDark
         ? AppTheme.darkText
@@ -41,44 +41,44 @@ class RecordsScreen
         ),
         title: Column(
           crossAxisAlignment:
-              CrossAxisAlignment
-                  .start,
+          CrossAxisAlignment
+              .start,
           children: [
             Text(
                 'Records & Enrollment',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight:
-                        FontWeight
-                            .w700,
+                    FontWeight
+                        .w700,
                     color: txt)),
             Text(
                 'Your official academic record and status',
                 style: TextStyle(
                     fontSize: 11,
                     color:
-                        txtSec)),
+                    txtSec)),
           ],
         ),
       ),
       body: SingleChildScrollView(
         padding:
-            const EdgeInsets.all(
-                16),
+        const EdgeInsets.all(
+            16),
         child: Column(
           children: [
             // ── Student ID Card ────────────────────────────────────
             Container(
               padding:
-                  const EdgeInsets
-                      .all(20),
+              const EdgeInsets
+                  .all(20),
               decoration:
-                  BoxDecoration(
+              BoxDecoration(
                 color: card,
                 borderRadius:
-                    BorderRadius
-                        .circular(
-                            20),
+                BorderRadius
+                    .circular(
+                    20),
                 border: Border.all(
                     color: brd),
                 boxShadow: [
@@ -86,12 +86,12 @@ class RecordsScreen
                     color: Colors
                         .black
                         .withValues(
-                            alpha:
-                                0.05),
+                        alpha:
+                        0.05),
                     blurRadius: 10,
                     offset:
-                        const Offset(
-                            0, 4),
+                    const Offset(
+                        0, 4),
                   ),
                 ],
               ),
@@ -101,13 +101,13 @@ class RecordsScreen
                     width: 80,
                     height: 80,
                     decoration:
-                        BoxDecoration(
+                    BoxDecoration(
                       color: AppTheme
                           .primary,
                       borderRadius:
-                          BorderRadius
-                              .circular(
-                                  20),
+                      BorderRadius
+                          .circular(
+                          20),
                     ),
                     child: const Icon(
                         Icons
@@ -119,52 +119,52 @@ class RecordsScreen
                   const SizedBox(
                       height: 12),
                   Text(
-                      'Toka Khaled',
+                      'Rawda Ayman',
                       style: TextStyle(
                           fontSize:
-                              20,
+                          20,
                           fontWeight:
-                              FontWeight
-                                  .w700,
+                          FontWeight
+                              .w700,
                           color:
-                              txt)),
+                          txt)),
                   Text(
-                      'ID: 224052',
+                      'ID: 21at41',
                       style: TextStyle(
                           fontSize:
-                              13,
+                          13,
                           color:
-                              txtSec,
+                          txtSec,
                           fontWeight:
-                              FontWeight
-                                  .w500)),
+                          FontWeight
+                              .w500)),
                   const SizedBox(
                       height: 16),
                   _InfoTile(
                       icon: Icons
                           .school_outlined,
                       label:
-                          'Faculty',
+                      'Faculty',
                       value:
-                          'Business Technology'),
+                      'Engineering & Technology'),
                   const SizedBox(
                       height: 8),
                   _InfoTile(
                       icon: Icons
                           .menu_book_outlined,
                       label:
-                          'Program',
+                      'Program',
                       value:
-                          'B.Sc. in Management Information Systems'),
+                      'B.Sc. in Computer Science'),
                   const SizedBox(
                       height: 8),
                   _InfoTile(
                       icon: Icons
                           .calendar_today_outlined,
                       label:
-                          'Year',
+                      'Year',
                       value:
-                          '4th Year'),
+                      '4th Year'),
                   const SizedBox(
                       height: 8),
                   _InfoTile(
@@ -172,37 +172,43 @@ class RecordsScreen
                           .grade_outlined,
                       label: 'GPA',
                       value:
-                          '3.82 / 4.0'),
+                      '3.82 / 4.0'),
+                  const SizedBox(height: 8),
+                  _InfoTile(
+                      icon: Icons
+                          .credit_card_outlined,
+                      label: 'Credits',
+                      value: '75 / 120'),
                   const SizedBox(
                       height: 16),
                   Container(
                     padding: const EdgeInsets
                         .symmetric(
                         horizontal:
-                            16,
+                        16,
                         vertical:
-                            12),
+                        12),
                     decoration:
-                        BoxDecoration(
+                    BoxDecoration(
                       color: AppTheme
                           .success
                           .withValues(
-                              alpha:
-                                  0.1),
+                          alpha:
+                          0.1),
                       borderRadius:
-                          BorderRadius
-                              .circular(
-                                  12),
+                      BorderRadius
+                          .circular(
+                          12),
                       border: Border.all(
                           color: AppTheme
                               .success
                               .withValues(
-                                  alpha: 0.3)),
+                              alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment:
-                          MainAxisAlignment
-                              .spaceBetween,
+                      MainAxisAlignment
+                          .spaceBetween,
                       children: [
                         Row(
                             children: [
@@ -217,7 +223,7 @@ class RecordsScreen
                                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: txt)),
                             ]),
                         const Text(
-                            'VALID',
+                            'ACTIVE',
                             style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
@@ -234,15 +240,15 @@ class RecordsScreen
             // ── Current Semester Enrollment ────────────────────────
             Container(
               padding:
-                  const EdgeInsets
-                      .all(18),
+              const EdgeInsets
+                  .all(18),
               decoration:
-                  BoxDecoration(
+              BoxDecoration(
                 color: card,
                 borderRadius:
-                    BorderRadius
-                        .circular(
-                            16),
+                BorderRadius
+                    .circular(
+                    16),
                 border: Border.all(
                     color: brd),
               ),
@@ -250,8 +256,8 @@ class RecordsScreen
                 children: [
                   Row(
                     mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
+                    MainAxisAlignment
+                        .spaceBetween,
                     children: [
                       Row(
                           children: [
@@ -287,88 +293,91 @@ class RecordsScreen
                       height: 14),
                   const _EnrollRow(
                       course:
-                          'Advanced Software Engineering',
+                      'Advanced Software Engineering',
                       code:
-                          'CS482',
+                      'CS482',
                       credits: '3',
                       type: 'CORE',
                       typeColor:
-                          AppTheme
-                              .info,
+                      AppTheme
+                          .info,
                       status:
-                          'Registered'),
+                      'Registered'),
                   Divider(
                       height: 16,
                       color: brd),
                   const _EnrollRow(
                       course:
-                          'Database Systems II',
+                      'Database Systems II',
                       code:
-                          'CS485',
+                      'CS485',
                       credits: '3',
                       type: 'CORE',
                       typeColor:
-                          AppTheme
-                              .info,
+                      AppTheme
+                          .info,
                       status:
-                          'Registered'),
+                      'Registered'),
                   Divider(
                       height: 16,
                       color: brd),
                   const _EnrollRow(
                       course:
-                          'Discrete Mathematics',
+                      'Discrete Mathematics',
                       code:
-                          'MAT381',
+                      'MAT381',
                       credits: '4',
                       type:
-                          'REQUIRED',
+                      'REQUIRED',
                       typeColor:
-                          AppTheme
-                              .warning,
+                      AppTheme
+                          .warning,
                       status:
-                          'Registered'),
+                      'Registered'),
                   Divider(
                       height: 16,
                       color: brd),
                   const _EnrollRow(
                       course:
-                          'Professional Ethics',
+                      'Professional Ethics',
                       code:
-                          'HSS281',
+                      'HSS281',
                       credits: '2',
                       type:
-                          'ELECTIVE',
+                      'ELECTIVE',
                       typeColor:
-                          AppTheme
-                              .success,
+                      AppTheme
+                          .success,
                       status:
-                          'Registered'),
+                      'Registered'),
                 ],
               ),
             ),
-            const SizedBox(
-                height: 20),
+            const SizedBox(height: 20),
+
+            // ── Semester Transcript ────────────────────────────────
+            _TranscriptTable(brd: brd, card: card, txt: txt, txtSec: txtSec),
+            const SizedBox(height: 20),
 
             // ── Academic Milestones ────────────────────────────────
             Container(
               padding:
-                  const EdgeInsets
-                      .all(18),
+              const EdgeInsets
+                  .all(18),
               decoration:
-                  BoxDecoration(
+              BoxDecoration(
                 color: card,
                 borderRadius:
-                    BorderRadius
-                        .circular(
-                            16),
+                BorderRadius
+                    .circular(
+                    16),
                 border: Border.all(
                     color: brd),
               ),
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+                CrossAxisAlignment
+                    .start,
                 children: [
                   Row(children: [
                     const Icon(
@@ -385,9 +394,9 @@ class RecordsScreen
                             fontWeight: FontWeight
                                 .w700,
                             fontSize:
-                                15,
+                            15,
                             color:
-                                txt)),
+                            txt)),
                   ]),
                   const SizedBox(
                       height: 14),
@@ -396,38 +405,38 @@ class RecordsScreen
                   Row(children: [
                     Expanded(
                       child:
-                          _MilestoneCard(
+                      _MilestoneCard(
                         title:
-                            'Freshman Year',
+                        'Freshman Year',
                         date:
-                            'June 2024',
+                        'June 2023',
                         status:
-                            'COMPLETED',
+                        'COMPLETED',
                         statusColor:
-                            AppTheme
-                                .success,
+                        AppTheme
+                            .success,
                         borderColor:
-                            AppTheme
-                                .success,
+                        AppTheme
+                            .success,
                       ),
                     ),
                     const SizedBox(
                         width: 12),
                     Expanded(
                       child:
-                          _MilestoneCard(
+                      _MilestoneCard(
                         title:
-                            'Sophomore Year',
+                        'Sophomore Year',
                         date:
-                            'June 2025',
+                        'June 2024',
                         status:
-                            'COMPLETED',
+                        'COMPLETED',
                         statusColor:
-                            AppTheme
-                                .success,
+                        AppTheme
+                            .success,
                         borderColor:
-                            AppTheme
-                                .success,
+                        AppTheme
+                            .success,
                       ),
                     ),
                   ]),
@@ -438,37 +447,37 @@ class RecordsScreen
                   Row(children: [
                     Expanded(
                       child:
-                          _MilestoneCard(
+                      _MilestoneCard(
                         title:
-                            'Junior Year',
+                        'Junior Year',
                         date:
-                            'Est. June 2026',
+                        '1-4 June 2025',
                         status:
-                            'IN PROGRESS',
+                        'IN PROGRESS',
                         statusColor:
-                            AppTheme
-                                .warning,
+                        AppTheme
+                            .info,
                         borderColor:
-                            AppTheme
-                                .warning,
+                        AppTheme
+                            .info,
                       ),
                     ),
                     const SizedBox(
                         width: 12),
                     Expanded(
                       child:
-                          _MilestoneCard(
+                      _MilestoneCard(
                         title:
-                            'Senior Project',
-                        date: '—',
+                        'Senior Project',
+                        date: 'Pending',
                         status:
-                            'PENDING',
+                        'PENDING',
                         statusColor:
-                            AppTheme
-                                .textLight,
+                        AppTheme
+                            .textLight,
                         borderColor:
-                            AppTheme
-                                .border,
+                        AppTheme
+                            .border,
                       ),
                     ),
                   ]),
@@ -484,6 +493,95 @@ class RecordsScreen
   }
 }
 
+// ── Transcript Table ──────────────────────────────────────────────
+
+class _TranscriptTable extends StatelessWidget {
+  final Color brd, card, txt, txtSec;
+  const _TranscriptTable({
+    required this.brd,
+    required this.card,
+    required this.txt,
+    required this.txtSec,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      {'sem': 'Fall 2022',   'gpa': '3.8', 'credits': '18', 'honor': "Dean's List"},
+      {'sem': 'Spring 2023', 'gpa': '3.9', 'credits': '18', 'honor': "Dean's List"},
+      {'sem': 'Fall 2023',   'gpa': '3.7', 'credits': '18', 'honor': '—'},
+      {'sem': 'Spring 2024', 'gpa': '3.8', 'credits': '18', 'honor': '—'},
+      {'sem': 'Fall 2024',   'gpa': '3.9', 'credits': '15', 'honor': "Dean's List"},
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: brd),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(children: [
+              const Icon(Icons.article_outlined, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Text('Semester Transcript',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: txt)),
+            ]),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.06),
+              border: Border(top: BorderSide(color: brd), bottom: BorderSide(color: brd)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(children: [
+              Expanded(flex: 2, child: Text('Semester', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: txtSec))),
+              Expanded(child: Text('GPA', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: txtSec))),
+              Expanded(child: Text('Credits', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: txtSec))),
+              Expanded(flex: 2, child: Text('Honor', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: txtSec))),
+            ]),
+          ),
+          ...rows.map((r) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: brd.withValues(alpha: 0.5))),
+            ),
+            child: Row(children: [
+              Expanded(flex: 2, child: Text(r['sem']!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: txt))),
+              // GPA in green (#00c853) matching web
+              Expanded(child: Text(r['gpa']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.success))),
+              Expanded(child: Text('${r['credits']!} cr', style: TextStyle(fontSize: 13, color: txtSec))),
+              Expanded(flex: 2, child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: r['honor'] == 'In Progress'
+                      ? AppTheme.info.withValues(alpha: 0.1)
+                      : r['honor'] == '—'
+                      ? brd.withValues(alpha: 0.5)
+                      : AppTheme.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(r['honor']!,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: r['honor'] == 'In Progress'
+                            ? AppTheme.info
+                            : r['honor'] == '—'
+                            ? txtSec
+                            : AppTheme.success)),
+              )),
+            ]),
+          )),
+        ],
+      ),
+    );
+  }
+}
+
 // ─── Sub-widgets ──────────────────────────────────────────────────
 
 class _InfoTile
@@ -492,15 +590,15 @@ class _InfoTile
   final String label, value;
   const _InfoTile(
       {required this.icon,
-      required this.label,
-      required this.value});
+        required this.label,
+        required this.value});
 
   @override
   Widget build(
       BuildContext context) {
     final isDark =
         Theme.of(context)
-                .brightness ==
+            .brightness ==
             Brightness.dark;
     final txt = isDark
         ? AppTheme.darkText
@@ -520,34 +618,34 @@ class _InfoTile
       decoration: BoxDecoration(
         color: tileBg,
         borderRadius:
-            BorderRadius.circular(
-                10),
+        BorderRadius.circular(
+            10),
       ),
       child: Row(children: [
         Icon(icon,
             size: 16,
             color:
-                AppTheme.primary),
+            AppTheme.primary),
         const SizedBox(width: 10),
         Column(
             crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
+            CrossAxisAlignment
+                .start,
             children: [
               Text(label,
                   style: TextStyle(
                       fontSize: 10,
                       color:
-                          txtSec,
+                      txtSec,
                       fontWeight:
-                          FontWeight
-                              .w500)),
+                      FontWeight
+                          .w500)),
               Text(value,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight:
-                          FontWeight
-                              .w600,
+                      FontWeight
+                          .w600,
                       color: txt)),
             ]),
       ]),
@@ -565,18 +663,18 @@ class _EnrollRow
   final Color typeColor;
   const _EnrollRow(
       {required this.course,
-      required this.code,
-      required this.credits,
-      required this.type,
-      required this.typeColor,
-      required this.status});
+        required this.code,
+        required this.credits,
+        required this.type,
+        required this.typeColor,
+        required this.status});
 
   @override
   Widget build(
       BuildContext context) {
     final isDark =
         Theme.of(context)
-                .brightness ==
+            .brightness ==
             Brightness.dark;
     final txt = isDark
         ? AppTheme.darkText
@@ -590,21 +688,21 @@ class _EnrollRow
         flex: 3,
         child: Column(
             crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
+            CrossAxisAlignment
+                .start,
             children: [
               Text(course,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight:
-                          FontWeight
-                              .w600,
+                      FontWeight
+                          .w600,
                       color: txt)),
               Text(code,
                   style: TextStyle(
                       fontSize: 11,
                       color:
-                          txtSec)),
+                      txtSec)),
             ]),
       ),
       Text(credits,
@@ -619,18 +717,18 @@ class _EnrollRow
             vertical: 3),
         decoration: BoxDecoration(
           color:
-              typeColor.withValues(
-                  alpha: 0.1),
+          typeColor.withValues(
+              alpha: 0.1),
           borderRadius:
-              BorderRadius
-                  .circular(6),
+          BorderRadius
+              .circular(6),
         ),
         child: Text(type,
             style: TextStyle(
                 fontSize: 10,
                 fontWeight:
-                    FontWeight
-                        .w700,
+                FontWeight
+                    .w700,
                 color: typeColor)),
       ),
       const SizedBox(width: 10),
@@ -638,7 +736,7 @@ class _EnrollRow
         const Icon(Icons.circle,
             size: 8,
             color:
-                AppTheme.success),
+            AppTheme.success),
         const SizedBox(width: 4),
         Text(status,
             style: const TextStyle(
@@ -646,8 +744,8 @@ class _EnrollRow
                 color: AppTheme
                     .success,
                 fontWeight:
-                    FontWeight
-                        .w500)),
+                FontWeight
+                    .w500)),
       ]),
     ]);
   }
@@ -660,17 +758,17 @@ class _MilestoneCard
       borderColor;
   const _MilestoneCard(
       {required this.title,
-      required this.date,
-      required this.status,
-      required this.statusColor,
-      required this.borderColor});
+        required this.date,
+        required this.status,
+        required this.statusColor,
+        required this.borderColor});
 
   @override
   Widget build(
       BuildContext context) {
     final isDark =
         Theme.of(context)
-                .brightness ==
+            .brightness ==
             Brightness.dark;
     final txt = isDark
         ? AppTheme.darkText
@@ -686,65 +784,65 @@ class _MilestoneCard
         : AppTheme.border;
     return ClipRRect(
       borderRadius:
-          BorderRadius.circular(
-              12),
+      BorderRadius.circular(
+          12),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
               color: brd),
           borderRadius:
-              BorderRadius
-                  .circular(12),
+          BorderRadius
+              .circular(12),
         ),
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment:
-                CrossAxisAlignment
-                    .stretch,
+            CrossAxisAlignment
+                .stretch,
             children: [
               Container(
                   width: 3,
                   color:
-                      borderColor),
+                  borderColor),
               Expanded(
                 child: Container(
                   color: cardBg,
                   padding:
-                      const EdgeInsets
-                          .all(14),
+                  const EdgeInsets
+                      .all(14),
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                    CrossAxisAlignment
+                        .start,
                     children: [
                       Text(title,
                           style: TextStyle(
                               fontWeight: FontWeight
                                   .w600,
                               fontSize:
-                                  13,
+                              13,
                               color:
-                                  txt)),
+                              txt)),
                       const SizedBox(
                           height:
-                              4),
+                          4),
                       Text(date,
                           style: TextStyle(
                               fontSize:
-                                  11,
+                              11,
                               color:
-                                  txtSec)),
+                              txtSec)),
                       const SizedBox(
                           height:
-                              6),
+                          6),
                       Text(status,
                           style: TextStyle(
                               fontSize:
-                                  11,
+                              11,
                               fontWeight: FontWeight
                                   .w700,
                               color:
-                                  statusColor)),
+                              statusColor)),
                     ],
                   ),
                 ),

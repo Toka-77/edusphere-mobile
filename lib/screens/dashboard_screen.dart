@@ -1,267 +1,284 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../app_theme.dart';
-import '../theme_provider.dart';
-import '../widgets/stat_card.dart';
-import 'assignments_screen.dart';
+import 'home_screen.dart';
 import 'grades_screen.dart';
 import 'timetable_screen.dart';
-import 'change_password_screen.dart';
-import 'login_screen.dart';
 import 'add_drop_screen.dart';
-import 'home_screen.dart';
-import 'records_screen.dart';
+import 'login_screen.dart';
+import 'attendance_qr_screen.dart';
+import 'settings_screen.dart';
 
-// ─────────────────────────────────────────────────────────────────
-// Data models
-// ─────────────────────────────────────────────────────────────────
+// ── Data ─────────────────────────────────────────────────────────
 
-class _Notif {
+class _StatItem {
   final IconData icon;
-  final Color color;
-  final String title;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String trend;
+  final bool trendUp;
+  const _StatItem({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.trend,
+    required this.trendUp,
+  });
+}
+
+class _ClassItem {
+  final String name;
   final String sub;
   final String time;
-  final bool isNew;
-  const _Notif(
-      {required this.icon,
-      required this.color,
-      required this.title,
-      required this.sub,
-      required this.time,
-      required this.isNew});
+  final String status;
+  final Color statusColor;
+  final Color dotColor;
+  const _ClassItem({
+    required this.name,
+    required this.sub,
+    required this.time,
+    required this.status,
+    required this.statusColor,
+    required this.dotColor,
+  });
 }
 
-// ─────────────────────────────────────────────────────────────────
-// DashboardScreen
-// ─────────────────────────────────────────────────────────────────
+class _GradeItem {
+  final String code;
+  final String task;
+  final int pct;
+  final Color color;
+  const _GradeItem(
+      {required this.code,
+        required this.task,
+        required this.pct,
+        required this.color});
+}
 
-class DashboardScreen
-    extends StatefulWidget {
-  const DashboardScreen(
-      {super.key});
+// ── Dashboard Screen ─────────────────────────────────────────────
+
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen>
-      createState() =>
-          _DashboardState();
+  State<DashboardScreen> createState() => _DashboardState();
 }
 
-class _DashboardState
-    extends State<
-        DashboardScreen> {
+class _DashboardState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   bool _showNotif = false;
+  Timer? _qrTimer;
+  int _qrSeconds = 300;
+  late AnimationController _qrPulse;
 
-  final _notifs = const [
-    _Notif(
-        icon: Icons
-            .assignment_outlined,
-        color: Color(0xFF3B82F6),
-        title:
-            'New Assignment Posted',
-        sub:
-            'Web Development - Project 3 is now available',
-        time: '5 min ago',
-        isNew: true),
-    _Notif(
-        icon: Icons.grade_outlined,
-        color: Color(0xFF10B981),
-        title: 'Grade Updated',
-        sub:
-            'Your grade for Midterm Exam has been posted',
-        time: '1 hour ago',
-        isNew: true),
-    _Notif(
-        icon: Icons.alarm_outlined,
-        color: Color(0xFFF59E0B),
-        title: 'Class Reminder',
-        sub:
-            'Advanced JavaScript starts in 30 minutes',
-        time: '2 hours ago',
-        isNew: false),
-    _Notif(
-        icon: Icons
-            .campaign_outlined,
-        color: Color(0xFF8B5CF6),
-        title: 'New Announcement',
-        sub:
-            'Campus will be closed on Friday for maintenance',
-        time: '1 day ago',
-        isNew: false),
+  // ✅ Pending Tasks removed
+  final List<_StatItem> _stats = const [
+    _StatItem(
+        icon: Icons.menu_book_outlined,
+        iconColor: AppTheme.primary,
+        label: 'Total Courses',
+        value: '6',
+        trend: 'This Sem',
+        trendUp: true),
+    _StatItem(
+        icon: Icons.emoji_events_outlined,
+        iconColor: AppTheme.blue,
+        label: 'Average GPA',
+        value: '3.8',
+        trend: '+0.2 pts',
+        trendUp: true),
+    _StatItem(
+        icon: Icons.calendar_today_outlined,
+        iconColor: AppTheme.orange,
+        label: 'Classes Today',
+        value: '4',
+        trend: 'On Track',
+        trendUp: true),
   ];
 
-  // ── helpers ──────────────────────────────────────────────────────
-  bool get _isDark =>
-      themeModeNotifier.value ==
-      ThemeMode.dark;
+  final List<_ClassItem> _classes = const [
+    _ClassItem(
+        name: 'Advanced Web Development',
+        sub: 'Dr. Sarah Hassan • CS 431',
+        time: '09:00 AM',
+        status: 'Live Now',
+        statusColor: AppTheme.primary,
+        dotColor: AppTheme.primary),
+    _ClassItem(
+        name: 'Database Systems',
+        sub: 'Dr. Ahmed Ali • CS 412',
+        time: '11:00 AM',
+        status: 'Upcoming',
+        statusColor: AppTheme.info,
+        dotColor: AppTheme.info),
+    _ClassItem(
+        name: 'Machine Learning',
+        sub: 'Dr. Layla Nour • IT Lab 411',
+        time: '07:00 PM',
+        status: 'Scheduled',
+        statusColor: AppTheme.purple,
+        dotColor: AppTheme.purple),
+  ];
+
+  final List<_GradeItem> _grades = const [
+    _GradeItem(
+        code: 'CS431', task: 'Project 3', pct: 95, color: Color(0xFF00C853)),
+    _GradeItem(
+        code: 'MATH301', task: 'Midterm Exam', pct: 38, color: AppTheme.primary),
+    _GradeItem(
+        code: 'ENG101', task: 'Essay', pct: 92, color: Color(0xFF00C853)),
+  ];
+
+  final List<Map<String, dynamic>> _notifs = [
+    {
+      'icon': Icons.schedule_outlined,
+      'color': const Color(0xFFF59E0B),
+      'title': 'Class Starting Soon',
+      'sub': 'Advanced Web Dev starts in 15 minutes',
+      'time': '15 min ago',
+      'isNew': true,
+    },
+    {
+      'icon': Icons.grade_outlined,
+      'color': const Color(0xFF10B981),
+      'title': 'Grade Posted',
+      'sub': 'CS431 Project 3 grade is now available',
+      'time': '1 hour ago',
+      'isNew': true,
+    },
+    {
+      'icon': Icons.warning_amber_outlined,
+      'color': AppTheme.primary,
+      'title': 'Attendance Warning',
+      'sub': 'Your attendance in CS402 is below 80%',
+      'time': '1 day ago',
+      'isNew': false,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _qrPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _qrTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_qrSeconds > 0) setState(() => _qrSeconds--);
+    });
+  }
+
+  @override
+  void dispose() {
+    _qrTimer?.cancel();
+    _qrPulse.dispose();
+    super.dispose();
+  }
+
+  String get _qrTimerStr {
+    final m = _qrSeconds ~/ 60;
+    final s = _qrSeconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  bool get _isDark => themeModeNotifier.value == ThemeMode.dark;
 
   Color _card(BuildContext ctx) =>
-      Theme.of(ctx).brightness ==
-              Brightness.dark
-          ? AppTheme.darkCard
-          : Colors.white;
+      Theme.of(ctx).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white;
 
-  Color _border(
-          BuildContext ctx) =>
-      Theme.of(ctx).brightness ==
-              Brightness.dark
-          ? AppTheme.darkBorder
-          : AppTheme.border;
+  Color _border(BuildContext ctx) =>
+      Theme.of(ctx).brightness == Brightness.dark ? AppTheme.darkBorder : AppTheme.border;
 
   Color _txt(BuildContext ctx) =>
-      Theme.of(ctx).brightness ==
-              Brightness.dark
-          ? AppTheme.darkText
-          : AppTheme.textPrimary;
-  // ── search dialog ──────────────────────────────────────────────────
-  void _showSearch(
-      BuildContext ctx,
-      Color txt) {
-    final isDark =
-        Theme.of(ctx).brightness ==
-            Brightness.dark;
-    final cardBg = isDark
-        ? AppTheme.darkCard
-        : Colors.white;
-    final txtSec = isDark
-        ? AppTheme.darkTextSec
-        : AppTheme.textSecondary;
+      Theme.of(ctx).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary;
+
+  Color _txtSec(BuildContext ctx) =>
+      Theme.of(ctx).brightness == Brightness.dark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
+  void _showSearch(BuildContext ctx) {
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    final cardBg = isDark ? AppTheme.darkCard : Colors.white;
+    final txt2 = _txt(ctx);
+    final txtSec2 = _txtSec(ctx);
+    final borderC = _border(ctx);
+
     showDialog(
       context: ctx,
       builder: (dialogCtx) {
         String query = '';
         final items = [
-          {
-            'label': 'Dashboard',
-            'icon': '📊',
-            'desc': 'Main overview'
-          },
-          {
-            'label':
-                'Attendance QR',
-            'icon': '📷',
-            'desc': 'QR attendance'
-          },
-          {
-            'label':
-                'Student Services',
-            'icon': '👥',
-            'desc':
-                'Medical, complaints'
-          },
-          {
-            'label': 'Curriculum',
-            'icon': '📚',
-            'desc': 'Course plan'
-          },
-          {
-            'label': 'Records',
-            'icon': '📄',
-            'desc':
-                'Academic records'
-          },
-          {
-            'label': 'Admin Panel',
-            'icon': '🛡️',
-            'desc':
-                'Administration'
-          },
-          {
-            'label':
-                'AI Assistant',
-            'icon': '🤖',
-            'desc': 'Chat with AI'
-          },
-          {
-            'label': 'Settings',
-            'icon': '⚙️',
-            'desc': 'Preferences'
-          },
+          {'label': 'Dashboard', 'icon': '📊', 'desc': 'Main overview'},
+          {'label': 'Attendance QR', 'icon': '📷', 'desc': 'QR attendance'},
+          {'label': 'Grades', 'icon': '📈', 'desc': 'Academic grades'},
+          {'label': 'Timetable', 'icon': '📅', 'desc': 'Class schedule'},
+          {'label': 'Student Services', 'icon': '👥', 'desc': 'Medical, complaints'},
+          {'label': 'Curriculum', 'icon': '📚', 'desc': 'Course plan'},
+          {'label': 'Records', 'icon': '📄', 'desc': 'Academic records'},
+          {'label': 'Admin Panel', 'icon': '🛡️', 'desc': 'Administration'},
+          {'label': 'AI Assistant', 'icon': '🤖', 'desc': 'Chat with AI'},
+          {'label': 'Settings', 'icon': '⚙️', 'desc': 'Preferences'},
         ];
-        return StatefulBuilder(
-            builder:
-                (dialogCtx, setS) {
-          final results = query
-                  .isNotEmpty
+        return StatefulBuilder(builder: (dialogCtx, setS) {
+          final results = query.isNotEmpty
               ? items
-                  .where((i) => (i[
-                              'label']! +
-                          i[
-                              'desc']!)
-                      .toLowerCase()
-                      .contains(query
-                          .toLowerCase()))
-                  .toList()
-              : <Map<String,
-                  String>>[];
+              .where((i) => (i['label']! + i['desc']!)
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+              .toList()
+              : <Map<String, String>>[];
           return Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            16)),
-            backgroundColor:
-                cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: cardBg,
             child: Padding(
-              padding:
-                  const EdgeInsets
-                      .all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
-                mainAxisSize:
-                    MainAxisSize
-                        .min,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
-                    autofocus:
-                        true,
-                    style: TextStyle(
-                        color:
-                            txt),
-                    decoration:
-                        InputDecoration(
-                      hintText:
-                          'Search anything...',
-                      hintStyle:
-                          TextStyle(
-                              color:
-                                  txtSec),
-                      prefixIcon: Icon(
-                          Icons
-                              .search,
-                          color:
-                              txtSec),
+                    autofocus: true,
+                    style: TextStyle(color: txt2),
+                    decoration: InputDecoration(
+                      hintText: 'Search anything...',
+                      hintStyle: TextStyle(color: txtSec2),
+                      prefixIcon: Icon(Icons.search, color: txtSec2),
                       border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(
-                                  12)),
+                          borderSide: BorderSide(color: borderC),
+                          borderRadius: BorderRadius.circular(12)),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: borderC),
+                          borderRadius: BorderRadius.circular(12)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    onChanged: (v) =>
-                        setS(() =>
-                            query =
-                                v),
+                    onChanged: (v) => setS(() => query = v),
                   ),
-                  if (results
-                      .isNotEmpty) ...[
-                    const SizedBox(
-                        height: 8),
-                    ...results.map(
-                        (item) =>
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 6),
-                              child:
-                                  Row(children: [
-                                Text(item['icon']!, style: const TextStyle(fontSize: 18)),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                    child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(item['label']!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: txt)),
-                                    Text(item['desc']!, style: TextStyle(fontSize: 12, color: txtSec)),
-                                  ],
-                                )),
-                              ]),
-                            )),
+                  if (results.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ...results.map((item) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(children: [
+                        Text(item['icon']!, style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item['label']!,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: txt2)),
+                              Text(item['desc']!,
+                                  style: TextStyle(fontSize: 12, color: txtSec2)),
+                            ],
+                          ),
+                        ),
+                      ]),
+                    )),
                   ],
                 ],
               ),
@@ -272,597 +289,364 @@ class _DashboardState
     );
   }
 
-  // ── build ─────────────────────────────────────────────────────────
   @override
-  Widget build(
-      BuildContext context) {
+  Widget build(BuildContext context) {
     final card = _card(context);
-    final border =
-        _border(context);
+    final border = _border(context);
     final txt = _txt(context);
-    final newCount = _notifs
-        .where((n) => n.isNew)
-        .length;
+    final txtSec = _txtSec(context);
+    final newCount = _notifs.where((n) => n['isNew'] == true).length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Stack(
         children: [
-          // ── Main scroll ──────────────────────────────────────────
           SafeArea(
-            child:
-                CustomScrollView(
+            child: CustomScrollView(
               slivers: [
-                // ── AppBar ─────────────────────────────────────────
+                // ── AppBar ────────────────────────────────────────
                 SliverAppBar(
                   pinned: true,
-                  backgroundColor:
-                      card,
-                  leading:
-                      IconButton(
-                    icon: Icon(
-                        Icons.menu,
-                        color:
-                            txt),
-                    onPressed:
-                        HomeScreen
-                            .openDrawer,
+                  backgroundColor: card,
+                  leading: IconButton(
+                    icon: Icon(Icons.menu, color: txt),
+                    onPressed: HomeScreen.openDrawer,
                   ),
+                  // ✅ FIX: titleSpacing + mainAxisSize.min + Flexible
+                  titleSpacing: 0,
                   title: Row(
-                      children: [
-                        Container(
-                          width:
-                              36,
-                          height:
-                              36,
-                          decoration: BoxDecoration(
-                              color: AppTheme
-                                  .primary,
-                              borderRadius:
-                                  BorderRadius.circular(10)),
-                          child: const Icon(
-                              Icons
-                                  .school,
-                              color: Colors
-                                  .white,
-                              size:
-                                  20),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(
-                            width:
-                                10),
-                        Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
+                        child: Padding(
+                          padding: const EdgeInsets.all(3),
+                          child: Image.asset('assets/images/logo.png',
+                              fit: BoxFit.contain),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                                'EduSphere',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: txt)),
-                            const Text(
-                                'Student Portal',
-                                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                            Text('EduSphere',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: txt)),
+                            Text('Student Portal',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 11, color: txtSec)),
                           ],
                         ),
-                      ]),
+                      ),
+                    ],
+                  ),
                   actions: [
-                    // 🔍 Search
                     IconButton(
-                      onPressed: () =>
-                          _showSearch(
-                              context,
-                              txt),
-                      icon: Icon(
-                          Icons
-                              .search,
-                          color:
-                              txt),
+                      onPressed: () => _showSearch(context),
+                      icon: Icon(Icons.search, color: txt),
                     ),
-                    // 🔔 Notification bell
                     IconButton(
-                      onPressed: () =>
-                          setState(() =>
-                              _showNotif =
-                                  !_showNotif),
+                      tooltip: _isDark ? 'Light Mode' : 'Dark Mode',
+                      onPressed: () {
+                        themeModeNotifier.value =
+                        _isDark ? ThemeMode.light : ThemeMode.dark;
+                        setState(() {});
+                      },
+                      icon: Icon(
+                        _isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                        color: txt,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        setState(() {
+                          _showNotif = !_showNotif;
+                          if (_showNotif) {
+                            for (final n in _notifs) n['isNew'] = false;
+                          }
+                        });
+                      },
                       icon: Stack(
-                        clipBehavior:
-                            Clip.none,
+                        clipBehavior: Clip.none,
                         children: [
-                          Icon(
-                              Icons
-                                  .notifications_outlined,
-                              color:
-                                  txt),
-                          Positioned(
-                            right:
-                                -2,
-                            top:
-                                -2,
-                            child:
-                                Container(
-                              width:
-                                  16,
-                              height:
-                                  16,
-                              decoration: const BoxDecoration(
-                                  color: AppTheme.primary,
-                                  shape: BoxShape.circle),
-                              alignment:
-                                  Alignment.center,
-                              child: Text(
-                                  '$newCount',
-                                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                          Icon(Icons.notifications_outlined, color: txt),
+                          if (newCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                width: 16,
+                                height: 16,
+                                decoration: const BoxDecoration(
+                                    color: AppTheme.primary,
+                                    shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: Text('$newCount',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700)),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
-
-                    // ⚙️ Settings popup
-                    PopupMenuButton<
-                        String>(
-                      icon: Icon(
-                          Icons
-                              .settings_outlined,
-                          color:
-                              txt),
-                      onSelected:
-                          (v) {
-                        if (v ==
-                            'dark') {
-                          themeModeNotifier.value = _isDark
-                              ? ThemeMode
-                                  .light
-                              : ThemeMode
-                                  .dark;
-                          setState(
-                              () {});
-                        } else if (v ==
-                            'pass') {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const ChangePasswordScreen()));
-                        } else if (v ==
-                            'logout') {
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const LoginScreen()),
-                              (_) => false);
-                        }
-                      },
-                      itemBuilder:
-                          (_) => [
-                        PopupMenuItem(
-                          value:
-                              'dark',
-                          child: Row(
-                              children: [
-                                Icon(_isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, color: AppTheme.info, size: 20),
-                                const SizedBox(width: 10),
-                                Text(_isDark ? 'Light Mode' : 'Dark Mode'),
-                              ]),
-                        ),
-                        const PopupMenuItem(
-                          value:
-                              'pass',
-                          child: Row(
-                              children: [
-                                Icon(Icons.lock_outline, color: AppTheme.warning, size: 20),
-                                SizedBox(width: 10),
-                                Text('Change Password'),
-                              ]),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value:
-                              'logout',
-                          child: Row(
-                              children: [
-                                Icon(Icons.logout, color: AppTheme.primary, size: 20),
-                                SizedBox(width: 10),
-                                Text('Log Out', style: TextStyle(color: AppTheme.primary)),
-                              ]),
-                        ),
-                      ],
+                    IconButton(
+                      icon: Icon(Icons.settings_outlined, color: txt),
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const SettingsScreen())),
                     ),
-
-                    // Avatar
-                    const Padding(
-                      padding: EdgeInsets
-                          .only(
-                              right:
-                                  12),
-                      child:
-                          CircleAvatar(
-                        radius: 18,
-                        backgroundColor:
-                            AppTheme
-                                .primaryLight,
-                        child: Text(
-                            'TK',
-                            style: TextStyle(
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12)),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: PopupMenuButton<String>(
+                        tooltip: 'User menu',
+                        onSelected: (v) {
+                          if (v == 'logout') {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                  (_) => false,
+                            );
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            enabled: false,
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Rawda Ayman',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700, color: txt)),
+                                  Text('ID: 21at41',
+                                      style: TextStyle(fontSize: 11, color: txtSec)),
+                                ]),
+                          ),
+                          const PopupMenuDivider(),
+                          const PopupMenuItem(
+                            value: 'logout',
+                            child: Row(children: [
+                              Icon(Icons.logout, color: AppTheme.primary, size: 20),
+                              SizedBox(width: 10),
+                              Text('Log Out',
+                                  style: TextStyle(color: AppTheme.primary)),
+                            ]),
+                          ),
+                        ],
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            gradient: AppTheme.redGradient,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text('RA',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11)),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
 
-                // ── Body content ───────────────────────────────────
+                // ── Body ──────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding:
-                        const EdgeInsets
-                            .all(
-                            16),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Welcome banner
-                        Container(
-                          width: double
-                              .infinity,
-                          padding: const EdgeInsets
-                              .all(
-                              20),
-                          decoration:
-                              BoxDecoration(
-                            gradient:
-                                const LinearGradient(
-                              colors: [
-                                AppTheme.primary,
-                                AppTheme.primaryDark
-                              ],
-                              begin:
-                                  Alignment.topLeft,
-                              end:
-                                  Alignment.bottomRight,
+                        // Page Header
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back, Rawda Ayman 👋',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: txt,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Here's what's happening today.",
+                                    style: TextStyle(fontSize: 12, color: txtSec),
+                                  ),
+                                ],
+                              ),
                             ),
-                            borderRadius:
-                                BorderRadius.circular(20),
+                            const SizedBox(width: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 128),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _dbQuickBtn(
+                                    icon: Icons.table_chart_outlined,
+                                    label: 'Timetable',
+                                    isPrimary: false,
+                                    border: border,
+                                    txt: txt,
+                                    txtSec: txtSec,
+                                    isDark: isDark,
+                                    onTap: () => Navigator.push(context,
+                                        MaterialPageRoute(builder: (_) => const TimetableScreen())),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _dbQuickBtn(
+                                    icon: Icons.add_circle_outline,
+                                    label: 'Add Course',
+                                    isPrimary: true,
+                                    border: border,
+                                    txt: txt,
+                                    txtSec: txtSec,
+                                    isDark: isDark,
+                                    onTap: () => Navigator.push(context,
+                                        MaterialPageRoute(builder: (_) => const AddDropScreen())),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Stat cards
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.35,
+                          children: _stats
+                              .map((s) => _StatCard(item: s, card: card, border: border))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Today's Classes
+                        _sectionHeader("Today's Classes", 'View Schedule', txt, () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const TimetableScreen()));
+                        }),
+                        const SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: border),
                           ),
-                          child:
-                              const Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                          child: Column(
+                            children: _classes
+                                .map((c) => _ClassRow(
+                                item: c, txtColor: txt, txtSec: txtSec, border: border))
+                                .toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Recent Grades
+                        _sectionHeader('Recent Grades', 'View All', txt, () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const GradesScreen()));
+                        }),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: border),
+                          ),
+                          child: Column(
+                            children: _grades
+                                .map((g) => _GradeRow(item: g, txtColor: txt, txtSec: txtSec))
+                                .toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Smart Attendance QR Card
+                        _QRCard(
+                          card: card,
+                          border: border,
+                          txt: txt,
+                          txtSec: txtSec,
+                          isDark: isDark,
+                          timerStr: _qrTimerStr,
+                          pulse: _qrPulse,
+                          onScan: () => Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => const AttendanceQRScreen())),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Quick Actions
+                        Text('Quick Actions',
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w700, color: txt)),
+                        const SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: border),
+                          ),
+                          child: Column(
                             children: [
-                              Text(
-                                  'Welcome back,',
-                                  style: TextStyle(color: Colors.white70, fontSize: 14)),
-                              SizedBox(
-                                  height: 4),
-                              Text(
-                                  'Toka Khaled! 👋',
-                                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
-                              SizedBox(
-                                  height: 4),
-                              Text(
-                                  "Here's what's happening with your classes today.",
-                                  style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              _QuickAction(
+                                icon: Icons.bar_chart_outlined,
+                                iconColor: AppTheme.blue,
+                                label: 'Check My Grades',
+                                border: border,
+                                txtColor: txt,
+                                onTap: () => Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) => const GradesScreen())),
+                              ),
+                              _QuickAction(
+                                icon: Icons.add_circle_outline,
+                                iconColor: AppTheme.success,
+                                label: 'Add/Drop Courses',
+                                border: border,
+                                txtColor: txt,
+                                onTap: () => Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) => const AddDropScreen())),
+                              ),
+                              _QuickAction(
+                                icon: Icons.table_chart_outlined,
+                                iconColor: AppTheme.primary,
+                                label: 'View Timetable',
+                                border: border,
+                                txtColor: txt,
+                                isLast: true,
+                                onTap: () => Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) => const TimetableScreen())),
+                              ),
                             ],
                           ),
                         ),
-                        const SizedBox(
-                            height:
-                                20),
-
-                        // Stat cards
-                        GridView
-                            .count(
-                          shrinkWrap:
-                              true,
-                          physics:
-                              const NeverScrollableScrollPhysics(),
-                          crossAxisCount:
-                              2,
-                          crossAxisSpacing:
-                              12,
-                          mainAxisSpacing:
-                              12,
-                          childAspectRatio:
-                              1.5,
-                          children: [
-                            StatCard(
-                                icon: Icons.menu_book_outlined,
-                                iconColor: AppTheme.primary,
-                                label: 'Total Courses',
-                                value: '6',
-                                trending: true),
-                            StatCard(
-                                icon: Icons.emoji_events_outlined,
-                                iconColor: AppTheme.info,
-                                label: 'Average GPA',
-                                value: '3.8',
-                                trending: true),
-                            StatCard(
-                                icon: Icons.calendar_today_outlined,
-                                iconColor: AppTheme.warning,
-                                label: 'Classes Today',
-                                value: '4'),
-                            StatCard(
-                                icon: Icons.access_time_outlined,
-                                iconColor: AppTheme.orange,
-                                label: 'Pending Tasks',
-                                value: '4'),
-                          ],
-                        ),
-                        const SizedBox(
-                            height:
-                                20),
-
-                        // Today's classes
-                        Text(
-                            "Today's Classes",
-                            style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: txt)),
-                        const SizedBox(
-                            height:
-                                12),
-                        _ClassCard(
-                            title:
-                                'Advanced Web Development',
-                            location:
-                                'Tech Building 201',
-                            time:
-                                '09:00 AM',
-                            badge:
-                                'Starting Soon',
-                            badgeColor: AppTheme
-                                .primary,
-                            iconBg: AppTheme
-                                .primaryLight,
-                            iconColor: AppTheme
-                                .primary,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                8),
-                        _ClassCard(
-                            title:
-                                'Database Systems',
-                            location:
-                                'Tech Building 305',
-                            time:
-                                '11:00 AM',
-                            iconBg: const Color(
-                                0xFFF3F4F6),
-                            iconColor: AppTheme
-                                .textSecondary,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                8),
-                        _ClassCard(
-                            title:
-                                'Machine Learning',
-                            location:
-                                'AI Lab 401',
-                            time:
-                                '02:00 PM',
-                            iconBg: const Color(
-                                0xFFF3F4F6),
-                            iconColor: AppTheme
-                                .textSecondary,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                20),
-
-                        // Recent grades
-                        Text(
-                            'Recent Grades',
-                            style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: txt)),
-                        const SizedBox(
-                            height:
-                                12),
-                        _GradeCard(
-                            course:
-                                'CS401',
-                            task:
-                                'Project 2',
-                            pct:
-                                0.95,
-                            grade:
-                                '95%',
-                            color: AppTheme
-                                .success,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                8),
-                        _GradeCard(
-                            course:
-                                'MATH301',
-                            task:
-                                'Midterm Exam',
-                            pct:
-                                0.88,
-                            grade:
-                                '88%',
-                            color: AppTheme
-                                .info,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                8),
-                        _GradeCard(
-                            course:
-                                'ENG201',
-                            task:
-                                'Essay 1',
-                            pct:
-                                0.92,
-                            grade:
-                                '92%',
-                            color: AppTheme
-                                .success,
-                            cardColor:
-                                card,
-                            borderColor:
-                                border),
-                        const SizedBox(
-                            height:
-                                20),
-
-                        // Pending Assignments header
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
-                          children: [
-                            Text(
-                                'Pending Assignments',
-                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: txt)),
-                            TextButton(
-                              onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const AssignmentsScreen())),
-                              child: const Text(
-                                  'View All',
-                                  style: TextStyle(color: AppTheme.primary, fontSize: 13, fontWeight: FontWeight.w600)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                            height:
-                                8),
-
-                        // Pending assignment cards
-                        ...[
-                          {
-                            'title':
-                                'Web Development Project 3',
-                            'course':
-                                'CS401',
-                            'due':
-                                'Due Dec 15',
-                            'priority':
-                                'High Priority',
-                            'pColor':
-                                AppTheme.primary,
-                            'aColor':
-                                AppTheme.primary
-                          },
-                          {
-                            'title':
-                                'Linear Algebra Problem Set',
-                            'course':
-                                'MATH301',
-                            'due':
-                                'Due Dec 18',
-                            'priority':
-                                'Medium Priority',
-                            'pColor':
-                                AppTheme.warning,
-                            'aColor':
-                                AppTheme.warning
-                          },
-                          {
-                            'title':
-                                'Technical Writing Essay',
-                            'course':
-                                'ENG201',
-                            'due':
-                                'Due Dec 20',
-                            'priority':
-                                'Medium Priority',
-                            'pColor':
-                                AppTheme.warning,
-                            'aColor':
-                                AppTheme.warning
-                          },
-                          {
-                            'title':
-                                'Database Design Project',
-                            'course':
-                                'CS402',
-                            'due':
-                                'Due Dec 22',
-                            'priority':
-                                'Low Priority',
-                            'pColor':
-                                AppTheme.success,
-                            'aColor':
-                                AppTheme.orange
-                          },
-                        ].expand(
-                            (item) =>
-                                [
-                                  _SimplePendingCard(
-                                    title: item['title'] as String,
-                                    course: item['course'] as String,
-                                    dueDate: item['due'] as String,
-                                    priority: item['priority'] as String,
-                                    priorityColor: item['pColor'] as Color,
-                                    accentColor: item['aColor'] as Color,
-                                    cardColor: card,
-                                    borderColor: border,
-                                  ),
-                                  const SizedBox(height: 8),
-                                ]),
-
-                        const SizedBox(
-                            height:
-                                20),
-
-                        // Quick Actions
-                        Text(
-                            'Quick Actions',
-                            style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: txt)),
-                        const SizedBox(
-                            height:
-                                12),
-                        Row(
-                            children: [
-                              Expanded(
-                                  child: _ActionBtn(label: 'View Assignments', borderColor: border, txtColor: txt, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentsScreen())))),
-                              const SizedBox(
-                                  width: 8),
-                              Expanded(
-                                  child: _ActionBtn(label: 'Check My Grades', borderColor: border, txtColor: txt, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen())))),
-                            ]),
-                        const SizedBox(
-                            height:
-                                8),
-                        Row(
-                            children: [
-                              Expanded(
-                                  child: _ActionBtn(label: 'Add/Drop Courses', borderColor: border, txtColor: txt, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddDropScreen())))),
-                              const SizedBox(
-                                  width: 8),
-                              Expanded(
-                                  child: _ActionBtn(label: 'View Timetable', borderColor: border, txtColor: txt, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen())))),
-                            ]),
-                        const SizedBox(
-                            height:
-                                24),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -871,165 +655,59 @@ class _DashboardState
             ),
           ),
 
-          // ── Notification overlay backdrop ──────────────────────────
-          if (_showNotif)
-            GestureDetector(
-                onTap: () =>
-                    setState(() =>
-                        _showNotif =
-                            false),
-                child: Container(
-                    color: Colors
-                        .black38)),
-
-          // ── Notification panel ─────────────────────────────────────
+          // Notification overlay backdrop
           if (_showNotif)
             Positioned(
-              top: MediaQuery.of(
-                          context)
-                      .padding
-                      .top +
-                  kToolbarHeight,
-              right: 8,
-              width: 310,
+              top: 0, right: 0, left: 0, bottom: 0,
+              child: GestureDetector(
+                onTap: () => setState(() => _showNotif = false),
+                child: Container(color: Colors.black.withValues(alpha: 0.3)),
+              ),
+            ),
+          // Notification panel
+          if (_showNotif)
+            Positioned(
+              top: 100,
+              right: 12,
+              left: 12,
               child: Material(
-                elevation: 10,
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            16),
-                color: card,
+                elevation: 12,
+                borderRadius: BorderRadius.circular(16),
+                color: _card(context),
                 child: Container(
-                  decoration:
-                      BoxDecoration(
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                                16),
-                    border: Border.all(
-                        color:
-                            border),
+                  width: 320,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
                   ),
                   child: Column(
-                    mainAxisSize:
-                        MainAxisSize
-                            .min,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // panel header
                       Padding(
-                        padding: const EdgeInsets
-                            .fromLTRB(
-                            16,
-                            14,
-                            10,
-                            10),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                                'Notifications',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: txt)),
-                            const SizedBox(
-                                width: 8),
-                            Container(
-                              padding: const EdgeInsets
-                                  .symmetric(
-                                  horizontal: 8,
-                                  vertical: 3),
-                              decoration: BoxDecoration(
-                                  color: AppTheme.primary,
-                                  borderRadius: BorderRadius.circular(20)),
-                              child: Text(
-                                  '$newCount new',
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(
-                                  Icons.close,
-                                  size: 18,
-                                  color: AppTheme.textSecondary),
-                              onPressed: () =>
-                                  setState(() => _showNotif = false),
-                              padding:
-                                  EdgeInsets.zero,
-                              constraints:
-                                  const BoxConstraints(),
+                            Text('Notifications',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: txt)),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  for (final n in _notifs) n['isNew'] = false;
+                                  _showNotif = false;
+                                });
+                              },
+                              child: const Text('Mark all read',
+                                  style: TextStyle(color: AppTheme.primary, fontSize: 12)),
                             ),
                           ],
                         ),
                       ),
-                      Divider(
-                          height:
-                              1,
-                          color:
-                              border),
-
-                      // notification rows
-                      ..._notifs.map(
-                          (n) =>
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: n.isNew ? n.color.withOpacity(0.04) : Colors.transparent,
-                                  border: Border(bottom: BorderSide(color: border, width: 0.5)),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: n.color.withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(n.icon, color: n.color, size: 18),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(children: [
-                                            Expanded(
-                                              child: Text(n.title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: txt)),
-                                            ),
-                                            if (n.isNew)
-                                              Container(
-                                                width: 7,
-                                                height: 7,
-                                                decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
-                                              ),
-                                          ]),
-                                          const SizedBox(height: 2),
-                                          Text(n.sub, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                          const SizedBox(height: 3),
-                                          Text(n.time, style: const TextStyle(fontSize: 11, color: AppTheme.textLight)),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )),
-
-                      // footer
-                      TextButton(
-                        onPressed: () =>
-                            setState(() =>
-                                _showNotif = false),
-                        child:
-                            const Padding(
-                          padding: EdgeInsets.only(
-                              bottom:
-                                  4),
-                          child: Text(
-                              'View All Notifications',
-                              style: TextStyle(
-                                  color: AppTheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13)),
-                        ),
-                      ),
+                      ..._notifs.map((n) => _NotifRow(
+                          notif: n, border: border, txtColor: txt, txtSec: txtSec)),
                     ],
                   ),
                 ),
@@ -1039,367 +717,585 @@ class _DashboardState
       ),
     );
   }
-}
 
-// ─── Small widgets ────────────────────────────────────────────────
-
-class _ClassCard
-    extends StatelessWidget {
-  final String title,
-      location,
-      time;
-  final Color iconBg,
-      iconColor,
-      cardColor,
-      borderColor;
-  final String? badge;
-  final Color? badgeColor;
-  const _ClassCard(
-      {required this.title,
-      required this.location,
-      required this.time,
-      required this.iconBg,
-      required this.iconColor,
-      required this.cardColor,
-      required this.borderColor,
-      this.badge,
-      this.badgeColor});
-
-  @override
-  Widget build(
-      BuildContext context) {
-    return Container(
-      padding:
-          const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius:
-              BorderRadius
-                  .circular(14),
-          border: Border.all(
-              color: borderColor)),
-      child: Row(children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius:
-                  BorderRadius
-                      .circular(
-                          10)),
-          child: Icon(
-              Icons.access_time,
-              color: iconColor,
-              size: 20),
+  Widget _dbQuickBtn({
+    required IconData icon,
+    required String label,
+    required bool isPrimary,
+    required Color border,
+    required Color txt,
+    required Color txtSec,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isPrimary
+              ? AppTheme.primary
+              : (isDark ? AppTheme.darkBg2 : AppTheme.background),
+          borderRadius: BorderRadius.circular(10),
+          border: isPrimary ? null : Border.all(color: border),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .w600,
-                      fontSize: 14,
-                      color: AppTheme
-                          .textPrimary)),
-              Row(children: [
-                const Icon(
-                    Icons
-                        .location_on_outlined,
-                    size: 12,
-                    color: AppTheme
-                        .textLight),
-                const SizedBox(
-                    width: 2),
-                Text(location,
-                    style: const TextStyle(
-                        fontSize:
-                            12,
-                        color: AppTheme
-                            .textSecondary)),
-              ]),
-            ],
-          ),
-        ),
-        Column(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .end,
-            children: [
-              Text(time,
-                  style: const TextStyle(
-                      fontWeight:
-                          FontWeight
-                              .w600,
-                      fontSize: 13,
-                      color: AppTheme
-                          .textPrimary)),
-              if (badge != null)
-                Text(badge!,
-                    style: TextStyle(
-                        fontSize:
-                            11,
-                        color:
-                            badgeColor,
-                        fontWeight:
-                            FontWeight
-                                .w500)),
-            ]),
-      ]),
-    );
-  }
-}
-
-class _GradeCard
-    extends StatelessWidget {
-  final String course, task, grade;
-  final double pct;
-  final Color color,
-      cardColor,
-      borderColor;
-  const _GradeCard(
-      {required this.course,
-      required this.task,
-      required this.pct,
-      required this.grade,
-      required this.color,
-      required this.cardColor,
-      required this.borderColor});
-
-  @override
-  Widget build(
-      BuildContext context) {
-    return Container(
-      padding:
-          const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius:
-              BorderRadius
-                  .circular(14),
-          border: Border.all(
-              color: borderColor)),
-      child: Column(children: [
-        Row(
-          mainAxisAlignment:
-              MainAxisAlignment
-                  .spaceBetween,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
-                children: [
-                  Text(course,
-                      style: const TextStyle(
-                          fontWeight:
-                              FontWeight
-                                  .w700,
-                          fontSize:
-                              14,
-                          color: AppTheme
-                              .textPrimary)),
-                  Text(task,
-                      style: const TextStyle(
-                          fontSize:
-                              12,
-                          color: AppTheme
-                              .textSecondary)),
-                ]),
-            Text(grade,
+            Icon(icon, size: 13, color: isPrimary ? Colors.white : txtSec),
+            const SizedBox(width: 5),
+            Text(label,
                 style: TextStyle(
-                    fontWeight:
-                        FontWeight
-                            .w700,
-                    fontSize: 18,
-                    color: color)),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isPrimary ? Colors.white : txt)),
           ],
         ),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius:
-              BorderRadius
-                  .circular(4),
-          child:
-              LinearProgressIndicator(
-            value: pct,
-            backgroundColor:
-                const Color(
-                    0xFFE5E7EB),
-            valueColor:
-                AlwaysStoppedAnimation<
-                    Color>(color),
-            minHeight: 6,
-          ),
-        ),
-      ]),
-    );
-  }
-}
-
-class _ActionBtn
-    extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final Color borderColor,
-      txtColor;
-  const _ActionBtn(
-      {required this.label,
-      required this.onTap,
-      required this.borderColor,
-      required this.txtColor});
-
-  @override
-  Widget build(
-      BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style:
-          OutlinedButton.styleFrom(
-        side: BorderSide(
-            color: borderColor),
-        shape:
-            RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            12)),
-        padding: const EdgeInsets
-            .symmetric(
-            vertical: 14),
-        foregroundColor: txtColor,
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 13,
-              fontWeight:
-                  FontWeight.w500,
-              color: txtColor)),
+    );
+  }
+
+  Widget _sectionHeader(
+      String title, String action, Color txt, VoidCallback onAction) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title,
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: txt)),
+        TextButton(
+          onPressed: onAction,
+          child: Row(children: [
+            Text(action,
+                style: const TextStyle(
+                    color: AppTheme.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward, size: 14, color: AppTheme.primary),
+          ]),
+        ),
+      ],
     );
   }
 }
 
-class _SimplePendingCard
-    extends StatelessWidget {
-  final String title,
-      course,
-      dueDate,
-      priority;
-  final Color priorityColor,
-      accentColor,
-      cardColor,
-      borderColor;
+// ── Stat Card ─────────────────────────────────────────────────────
 
-  const _SimplePendingCard({
-    required this.title,
-    required this.course,
-    required this.dueDate,
-    required this.priority,
-    required this.priorityColor,
-    required this.accentColor,
-    required this.cardColor,
-    required this.borderColor,
-  });
+class _StatCard extends StatelessWidget {
+  final _StatItem item;
+  final Color card;
+  final Color border;
+  const _StatCard({required this.item, required this.card, required this.border});
 
   @override
-  Widget build(
-      BuildContext context) {
-    return ClipRRect(
-      borderRadius:
-          BorderRadius.circular(
-              12),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-              color: borderColor),
-          borderRadius:
-              BorderRadius
-                  .circular(12),
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .stretch,
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Colored left accent strip
               Container(
-                  width: 4,
-                  color:
-                      accentColor),
-
-              // Card content
-              Expanded(
-                child: Container(
-                  color: cardColor,
-                  padding:
-                      const EdgeInsets
-                          .symmetric(
-                          horizontal:
-                              14,
-                          vertical:
-                              12),
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .spaceBetween,
-                    children: [
-                      Expanded(
-                        child:
-                            Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
-                          children: [
-                            Text(
-                                title,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary)),
-                            const SizedBox(
-                                height: 2),
-                            Text(
-                                course,
-                                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(
-                          width:
-                              10),
-                      Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .end,
-                        children: [
-                          Text(
-                              dueDate,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary)),
-                          const SizedBox(
-                              height:
-                                  2),
-                          Text(
-                              priority,
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: priorityColor)),
-                        ],
-                      ),
-                    ],
-                  ),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: item.iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(item.icon, color: item.iconColor, size: 20),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.trendUp
+                      ? const Color(0xFF00C853).withValues(alpha: 0.12)
+                      : AppTheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                        item.trendUp ? Icons.trending_up : Icons.trending_down,
+                        size: 11,
+                        color: item.trendUp ? const Color(0xFF00C853) : AppTheme.primary),
+                    const SizedBox(width: 3),
+                    Text(item.trend,
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: item.trendUp
+                                ? const Color(0xFF00C853)
+                                : AppTheme.primary)),
+                  ],
                 ),
               ),
             ],
           ),
+          const Spacer(),
+          Text(item.value,
+              style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.darkText
+                      : AppTheme.textPrimary)),
+          const SizedBox(height: 2),
+          Text(item.label,
+              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Class Row ─────────────────────────────────────────────────────
+
+class _ClassRow extends StatelessWidget {
+  final _ClassItem item;
+  final Color txtColor;
+  final Color txtSec;
+  final Color border;
+  const _ClassRow(
+      {required this.item,
+        required this.txtColor,
+        required this.txtSec,
+        required this.border});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: border.withValues(alpha: 0.5))),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: item.dotColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.check_box_outlined, color: item.dotColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name,
+                    style: TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w700, color: txtColor)),
+                const SizedBox(height: 2),
+                Text(item.sub, style: TextStyle(fontSize: 11, color: txtSec)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(item.time,
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600, color: txtColor)),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(item.status,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: item.statusColor)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Grade Row ─────────────────────────────────────────────────────
+
+class _GradeRow extends StatelessWidget {
+  final _GradeItem item;
+  final Color txtColor;
+  final Color txtSec;
+  const _GradeRow({required this.item, required this.txtColor, required this.txtSec});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.code,
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700, color: txtColor)),
+                  Text(item.task, style: TextStyle(fontSize: 11, color: txtSec)),
+                ],
+              ),
+              Text('${item.pct}%',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800, color: item.color)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: item.pct / 100.0,
+              minHeight: 6,
+              backgroundColor: item.color.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(item.color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── QR Card ───────────────────────────────────────────────────────
+
+class _QRCard extends StatelessWidget {
+  final Color card;
+  final Color border;
+  final Color txt;
+  final Color txtSec;
+  final bool isDark;
+  final String timerStr;
+  final AnimationController pulse;
+  final VoidCallback onScan;
+
+  const _QRCard({
+    required this.card,
+    required this.border,
+    required this.txt,
+    required this.txtSec,
+    required this.isDark,
+    required this.timerStr,
+    required this.pulse,
+    required this.onScan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Smart Attendance',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w800, color: txt)),
+                  const SizedBox(height: 2),
+                  Text('Scan QR to mark attendance',
+                      style: TextStyle(fontSize: 12, color: txtSec)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time, size: 12, color: AppTheme.primary),
+                    const SizedBox(width: 4),
+                    Text('Expires in $timerStr',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: AnimatedBuilder(
+              animation: pulse,
+              builder: (_, child) => Container(
+                padding: EdgeInsets.all(8 + pulse.value * 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.2 + pulse.value * 0.15),
+                      blurRadius: 16 + pulse.value * 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+              child: const _QRCodeWidget(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Center(
+            child: Text('CURRENT: CS402',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                    letterSpacing: 1)),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onScan,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 18),
+              label: const Text('Scan Now',
+                  style: TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Simple QR code visual
+class _QRCodeWidget extends StatelessWidget {
+  final List<List<int>> _grid = const [
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1],
+    [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0],
+    [1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+    [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1],
+  ];
+
+  const _QRCodeWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 140.0;
+    const cells = 21;
+    const cellSize = size / cells;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _QRPainter(grid: _grid, cellSize: cellSize),
+      ),
+    );
+  }
+}
+
+class _QRPainter extends CustomPainter {
+  final List<List<int>> grid;
+  final double cellSize;
+  const _QRPainter({required this.grid, required this.cellSize});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0xFF0F172A);
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        if (grid[r][c] == 1) {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(c * cellSize + 0.5, r * cellSize + 0.5,
+                  cellSize - 1, cellSize - 1),
+              const Radius.circular(1),
+            ),
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_QRPainter old) => false;
+}
+
+// ── Quick Action ──────────────────────────────────────────────────
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final Color border;
+  final Color txtColor;
+  final bool isLast;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.border,
+    required this.txtColor,
+    required this.onTap,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(bottom: BorderSide(color: border.withValues(alpha: 0.5))),
         ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600, color: txtColor)),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Notification Row ──────────────────────────────────────────────
+
+class _NotifRow extends StatelessWidget {
+  final Map<String, dynamic> notif;
+  final Color border;
+  final Color txtColor;
+  final Color txtSec;
+  const _NotifRow(
+      {required this.notif,
+        required this.border,
+        required this.txtColor,
+        required this.txtSec});
+
+  @override
+  Widget build(BuildContext context) {
+    final isNew = notif['isNew'] == true;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isNew
+            ? (notif['color'] as Color).withValues(alpha: 0.04)
+            : Colors.transparent,
+        border: Border(top: BorderSide(color: border.withValues(alpha: 0.5))),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: (notif['color'] as Color).withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(notif['icon'] as IconData,
+                color: notif['color'] as Color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(notif['title'] as String,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: txtColor)),
+                    ),
+                    if (isNew)
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                            color: AppTheme.primary, shape: BoxShape.circle),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(notif['sub'] as String,
+                    style: TextStyle(fontSize: 11, color: txtSec)),
+                const SizedBox(height: 2),
+                Text(notif['time'] as String,
+                    style: const TextStyle(
+                        fontSize: 10, color: AppTheme.textSecondary)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

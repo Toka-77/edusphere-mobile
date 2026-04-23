@@ -30,8 +30,7 @@ class CurriculumScreen
               height: 36,
               decoration:
                   BoxDecoration(
-                color: AppTheme
-                    .primaryLight,
+               color: isDark ? AppTheme.darkCard : AppTheme.primaryLight,
                 borderRadius:
                     BorderRadius
                         .circular(
@@ -46,28 +45,26 @@ class CurriculumScreen
             ),
             const SizedBox(
                 width: 10),
-            const Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
-              children: [
-                Text(
-                    'Curriculum Management',
-                    style: TextStyle(
-                        fontSize:
-                            16,
-                        fontWeight:
-                            FontWeight
-                                .w700)),
-                Text(
-                    'Bachelor of Science in Computer Science',
-                    style: TextStyle(
-                        fontSize:
-                            10,
-                        color: AppTheme
-                            .textSecondary)),
-              ],
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Curriculum Management',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: txt,
+                ),
+              ),
+              Text(
+                'Bachelor of Science in Computer Science',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isDark ? AppTheme.darkTextSec : AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
           ],
         ),
       ),
@@ -87,15 +84,8 @@ class CurriculumScreen
                       .all(16),
               decoration:
                   BoxDecoration(
-                color:
-                    Colors.white,
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            16),
-                border: Border.all(
-                    color: AppTheme
-                        .border),
+                color: card,
+border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.border),
               ),
               child: Column(
                 crossAxisAlignment:
@@ -114,15 +104,14 @@ class CurriculumScreen
                                   .w600)),
                   const SizedBox(
                       height: 4),
-                  const Text('63%',
-                      style: TextStyle(
-                          fontSize:
-                              32,
-                          fontWeight:
-                              FontWeight
-                                  .w800,
-                          color: AppTheme
-                              .textPrimary)),
+              Text(
+  '63%',
+  style: TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    color: txt,
+  ),
+),
                   const SizedBox(
                       height: 8),
                   ClipRRect(
@@ -131,11 +120,11 @@ class CurriculumScreen
                             .circular(
                                 4),
                     child:
-                        const LinearProgressIndicator(
+                        LinearProgressIndicator(
                       value: 0.63,
-                      backgroundColor:
-                          Color(
-                              0xFFE5E7EB),
+                          backgroundColor: isDark 
+    ? AppTheme.darkBorder 
+    : const Color(0xFFE5E7EB),
                       valueColor: AlwaysStoppedAnimation<
                               Color>(
                           AppTheme
@@ -491,15 +480,8 @@ class CurriculumScreen
                       .all(16),
               decoration:
                   BoxDecoration(
-                color:
-                    Colors.white,
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                            14),
-                border: Border.all(
-                    color: AppTheme
-                        .border),
+                color: card,
+border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.border),
               ),
               child: const Row(
                 mainAxisAlignment:
@@ -551,59 +533,50 @@ class _MiniStatCard
   final String value;
   final String sub;
 
-  const _MiniStatCard(
-      {required this.label,
-      required this.value,
-      required this.sub});
+  const _MiniStatCard({required this.label,
+    required this.value,
+    required this.sub});
 
   @override
-  Widget build(
-      BuildContext context) {
+  Widget build(BuildContext context) {
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
+    final card = isDark ? AppTheme.darkCard : Colors.white;
+    final border = isDark ? AppTheme.darkBorder : AppTheme.border;
+    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
     return Container(
-      padding:
-          const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(
-                14),
-        border: Border.all(
-            color:
-                AppTheme.border),
+        color: card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: border),
       ),
       child: Column(
         children: [
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 22,
-                  fontWeight:
-                      FontWeight
-                          .w800,
-                  color: AppTheme
-                      .textPrimary)),
+                  fontWeight: FontWeight.w800,
+                  color: txt)),
           Text(label,
-              textAlign:
-                  TextAlign.center,
-              style: const TextStyle(
+              textAlign: TextAlign.center,
+              style: TextStyle(
                   fontSize: 10,
-                  color: AppTheme
-                      .textSecondary,
-                  fontWeight:
-                      FontWeight
-                          .w500)),
+                  color: txtSec,
+                  fontWeight: FontWeight.w500)),
           Text(sub,
-              textAlign:
-                  TextAlign.center,
-              style: const TextStyle(
+              textAlign: TextAlign.center,
+              style: TextStyle(
                   fontSize: 9,
-                  color: AppTheme
-                      .textLight)),
+                  color: txtSec)),
         ],
       ),
     );
   }
 }
-
 enum CourseStatus {
   completed,
   inProgress,
@@ -732,191 +705,164 @@ class _YearSection
   }
 }
 
-class _CourseRow
-    extends StatelessWidget {
+// 🔴 أهم تعديل كان في _CourseRow و Legend
+
+class _CourseRow extends StatelessWidget {
   final _CourseData course;
 
-  const _CourseRow(
-      {required this.course});
+  const _CourseRow({required this.course});
 
   @override
-  Widget build(
-      BuildContext context) {
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
     IconData icon;
     Color color;
     Widget? trailing;
 
     switch (course.status) {
       case CourseStatus.completed:
-        icon = Icons
-            .check_circle_outline;
+        icon = Icons.check_circle_outline;
         color = AppTheme.success;
         trailing = Text(
-            course.grade,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight:
-                    FontWeight
-                        .w700,
-                color: AppTheme
-                    .textPrimary));
-        break;
-      case CourseStatus.inProgress:
-        icon = Icons
-            .access_time_outlined;
-        color = AppTheme.info;
-        trailing = Container(
-          padding: const EdgeInsets
-              .symmetric(
-              horizontal: 6,
-              vertical: 3),
-          decoration:
-              BoxDecoration(
-            color: const Color(
-                0xFFEFF6FF),
-            borderRadius:
-                BorderRadius
-                    .circular(6),
+          course.grade,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: txt,
           ),
-          child: const Text(
-              'In Progress',
-              style: TextStyle(
-                  fontSize: 9,
-                  color: AppTheme
-                      .info,
-                  fontWeight:
-                      FontWeight
-                          .w600)),
         );
         break;
+
+      case CourseStatus.inProgress:
+        icon = Icons.access_time_outlined;
+        color = AppTheme.info;
+        trailing = Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkCard : const Color(0xFFEFF6FF),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            'In Progress',
+            style: TextStyle(
+              fontSize: 9,
+              color: AppTheme.info,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+        break;
+
       case CourseStatus.planned:
         icon = Icons.star_outline;
         color = AppTheme.warning;
         trailing = Container(
-          padding: const EdgeInsets
-              .symmetric(
-              horizontal: 6,
-              vertical: 3),
-          decoration:
-              BoxDecoration(
-            color: const Color(
-                0xFFFFFBEB),
-            borderRadius:
-                BorderRadius
-                    .circular(6),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkCard : const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(6),
           ),
-          child: const Text(
-              'Planned',
-              style: TextStyle(
-                  fontSize: 9,
-                  color: AppTheme
-                      .warning,
-                  fontWeight:
-                      FontWeight
-                          .w600)),
+          child: Text(
+            'Planned',
+            style: TextStyle(
+              fontSize: 9,
+              color: AppTheme.warning,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         );
         break;
+
       case CourseStatus.locked:
         icon = Icons.lock_outline;
         color = AppTheme.textLight;
         trailing = Container(
-          padding: const EdgeInsets
-              .symmetric(
-              horizontal: 6,
-              vertical: 3),
-          decoration:
-              BoxDecoration(
-            color: const Color(
-                0xFFF3F4F6),
-            borderRadius:
-                BorderRadius
-                    .circular(6),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          decoration: BoxDecoration(
+            color: isDark ? AppTheme.darkCard : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(6),
           ),
-          child: const Text(
-              'Locked',
-              style: TextStyle(
-                  fontSize: 9,
-                  color: AppTheme
-                      .textLight,
-                  fontWeight:
-                      FontWeight
-                          .w600)),
+          child: Text(
+            'Locked',
+            style: TextStyle(
+              fontSize: 9,
+              color: AppTheme.textLight,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         );
         break;
     }
 
     return Padding(
-      padding:
-          const EdgeInsets.only(
-              bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon,
-              size: 14,
-              color: color),
+          Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(course.code,
-                    style: const TextStyle(
-                        fontSize:
-                            11,
-                        fontWeight:
-                            FontWeight
-                                .w600,
-                        color: AppTheme
-                            .textPrimary)),
-                Text(course.name,
-                    style: const TextStyle(
-                        fontSize:
-                            9,
-                        color: AppTheme
-                            .textSecondary),
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow
-                            .ellipsis),
+                Text(
+                  course.code,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: txt,
+                  ),
+                ),
+                Text(
+                  course.name,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: txtSec,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          trailing,
+          trailing!,
         ],
       ),
     );
   }
 }
 
-class _LegendItem
-    extends StatelessWidget {
+class _LegendItem extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label;
 
-  const _LegendItem(
-      {required this.icon,
-      required this.color,
-      required this.label});
+  const _LegendItem({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
 
   @override
-  Widget build(
-      BuildContext context) {
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final txtSec =
+        isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
     return Row(
-      mainAxisSize:
-          MainAxisSize.min,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon,
-            size: 14,
-            color: color),
+        Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(
-                fontSize: 11,
-                color: AppTheme
-                    .textSecondary)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: txtSec,
+          ),
+        ),
       ],
     );
   }

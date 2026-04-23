@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'screens/login_screen.dart';
-import 'theme_provider.dart';
 import 'locale_provider.dart';
 
 void main() {
