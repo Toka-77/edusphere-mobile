@@ -12,6 +12,9 @@ import 'grades_screen.dart';
 import 'timetable_screen.dart';
 import 'add_drop_screen.dart';
 import 'login_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_event.dart';
 
 class HomeScreen extends StatefulWidget {
   final int initialIndex;
@@ -285,12 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const LoginScreen()),
-                              (_) => false,
-                        );
+                        context.read<AuthBloc>().add(LogoutRequested());
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,

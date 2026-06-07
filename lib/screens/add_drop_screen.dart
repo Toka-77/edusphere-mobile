@@ -1,130 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../app_theme.dart';
+import '../logic/registration/registration_bloc.dart';
+import '../logic/registration/registration_event.dart';
+import '../logic/registration/registration_state.dart';
+import '../data/models/registration_model.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_state.dart';
 
-// ─── Model ────────────────────────────────────────────────────────
-class _Course {
-  final String code,
-      name,
-      instructor,
-      schedule,
-      location;
-  final int credits,
-      enrolled,
-      capacity;
-  final Color codeColor;
-  const _Course({
-    required this.code,
-    required this.name,
-    required this.instructor,
-    required this.schedule,
-    required this.location,
-    required this.credits,
-    required this.enrolled,
-    required this.capacity,
-    required this.codeColor,
-  });
-  bool get isFull =>
-      enrolled >= capacity;
-}
-
-// ─── Screen ───────────────────────────────────────────────────────
-class AddDropScreen
-    extends StatefulWidget {
+class AddDropScreen extends StatefulWidget {
   const AddDropScreen({super.key});
+
   @override
-  State<AddDropScreen>
-  createState() =>
-      _AddDropState();
+  State<AddDropScreen> createState() => _AddDropState();
 }
 
-class _AddDropState
-    extends State<AddDropScreen>
-    with
-        SingleTickerProviderStateMixin {
+class _AddDropState extends State<AddDropScreen> with SingleTickerProviderStateMixin {
   late TabController _tab;
-  final _searchCtrl =
-  TextEditingController();
+  final _searchCtrl = TextEditingController();
 
-  final List<_Course> _all = const [
-    _Course(
-        code: 'CS412',
-        name: 'Database Systems',
-        instructor: 'Dr. Ahmed Ali',
-        schedule: 'MWF 11:00-12:30 PM',
-        location: 'CS Building 305',
-        credits: 3,
-        enrolled: 22,
-        capacity: 30,
-        codeColor: Color(0xFF8B5CF6)),
-    _Course(
-        code: 'CS302',
-        name: 'Machine Learning',
-        instructor: 'Dr. Layla Nour',
-        schedule: 'TTh 10:00-11:30 AM',
-        location: 'IT Lab 411',
-        credits: 3,
-        enrolled: 30,
-        capacity: 30,
-        codeColor: Color(0xFF3B82F6)),
-    _Course(
-        code: 'ARBLEET',
-        name: 'Arabic Language',
-        instructor: 'Dr. Hany Fahmy',
-        schedule: 'MWF 9:00-10:00 AM',
-        location: 'Arts Building 102',
-        credits: 2,
-        enrolled: 15,
-        capacity: 25,
-        codeColor: Color(0xFF10B981)),
-    _Course(
-        code: 'IT205',
-        name: 'Information Systems',
-        instructor: 'Dr. Sara Khaled',
-        schedule: 'TTh 1:00-2:30 PM',
-        location: 'IT Building 210',
-        credits: 3,
-        enrolled: 12,
-        capacity: 28,
-        codeColor: Color(0xFFF97316)),
-    _Course(
-        code: 'MATH401',
-        name: 'Numerical Methods',
-        instructor: 'Prof. Michael Chen',
-        schedule: 'MWF 2:00-3:00 PM',
-        location: 'Math Hall 201',
-        credits: 3,
-        enrolled: 10,
-        capacity: 30,
-        codeColor: Color(0xFFF59E0B)),
-    _Course(
-        code: 'CS350',
-        name: 'Computer Networks',
-        instructor: 'Dr. Ahmed Taha',
-        schedule: 'TTh 3:00-4:30 PM',
-        location: 'CS Lab 405',
-        credits: 3,
-        enrolled: 20,
-        capacity: 30,
-        codeColor: Color(0xFF6366F1)),
-    _Course(
-        code: 'ENG201',
-        name: 'Technical Writing',
-        instructor: 'Prof. Lisa Adams',
-        schedule: 'MWF 9:00-10:00 AM',
-        location: 'Arts Building 102',
-        credits: 2,
-        enrolled: 15,
-        capacity: 25,
-        codeColor: Color(0xFF10B981)),
-  ];
-
-  late Set<String> _enrolled;
+  int? _studentId;
 
   @override
   void initState() {
     super.initState();
     _tab = TabController(length: 2, vsync: this);
-    _enrolled = {'CS431', 'MATH301'};
+    
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _studentId = authState.user.studentNumericId;
+      if (_studentId != null) {
+        context.read<RegistrationBloc>().add(LoadAvailableCourses(_studentId!));
+      }
+    }
   }
 
   @override
@@ -134,38 +42,27 @@ class _AddDropState
     super.dispose();
   }
 
-  List<_Course> get _myCourses =>
-      _all.where((c) => _enrolled.contains(c.code)).toList();
-
-  List<_Course> get _available {
-    final q = _searchCtrl.text.toLowerCase();
-    return _all.where((c) {
-      if (_enrolled.contains(c.code)) return false;
-      if (q.isEmpty) return true;
-      return c.name.toLowerCase().contains(q) ||
-          c.code.toLowerCase().contains(q) ||
-          c.instructor.toLowerCase().contains(q);
-    }).toList();
+  void _add(AvailableCourse c) {
+    if (_studentId == null) return;
+    if (!c.canRegister) {
+      if (c.validationErrors.isNotEmpty) {
+        _snack(c.validationErrors.first, AppTheme.error);
+      }
+      return;
+    }
+    context.read<RegistrationBloc>().add(RegisterCourse(_studentId!, c.teacherCourseId));
   }
 
-  int get _totalCredits =>
-      _myCourses.fold(0, (s, c) => s + c.credits);
-
-  void _add(_Course c) {
-    if (c.isFull) return;
-    setState(() => _enrolled.add(c.code));
-    _snack('${c.code} added to your courses ✓', AppTheme.success);
-    _tab.animateTo(0);
-  }
-
-  void _drop(_Course c) {
+  void _drop(CourseInfo c) {
+    if (_studentId == null || c.studentCourseId == null) return;
+    
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Drop Course',
             style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to drop "${c.name}"?',
+        content: Text('Are you sure you want to drop "${c.title}"?',
             style: const TextStyle(color: AppTheme.textSecondary)),
         actions: [
           TextButton(
@@ -174,11 +71,10 @@ class _AddDropState
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
             onPressed: () {
               Navigator.pop(ctx);
-              setState(() => _enrolled.remove(c.code));
-              _snack('${c.code} dropped', AppTheme.primary);
+              context.read<RegistrationBloc>().add(DropCourse(_studentId!, c.studentCourseId!));
             },
             child: const Text('Drop'),
           ),
@@ -196,7 +92,7 @@ class _AddDropState
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.all(16),
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     ));
   }
 
@@ -216,10 +112,10 @@ class _AddDropState
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Add / Drop Courses',
+            Text('Add Courses',
                 style: TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
-            Text('Manage your enrollment for Spring 2024',
+            Text('Manage your enrollment',
                 style: TextStyle(fontSize: 11, color: txtSec)),
           ],
         ),
@@ -227,170 +123,228 @@ class _AddDropState
           preferredSize: const Size.fromHeight(48),
           child: Container(
             color: card,
-            child: TabBar(
-              controller: _tab,
-              labelColor: AppTheme.primary,
-              unselectedLabelColor: AppTheme.textSecondary,
-              indicatorColor: AppTheme.primary,
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w700),
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('My Courses'),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text('${_myCourses.length}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+            child: BlocConsumer<RegistrationBloc, RegistrationState>(
+              listener: (context, state) {
+                if (state is RegistrationActionSuccess) {
+                  _snack(state.message, AppTheme.success);
+                  _tab.animateTo(0);
+                } else if (state is RegistrationActionFailure) {
+                  _snack(state.message, AppTheme.error);
+                }
+              },
+              builder: (context, state) {
+                int myCoursesCount = 0;
+                int availableCount = 0;
+
+                if (state is RegistrationLoaded) {
+                  myCoursesCount = state.myCourses.length;
+                  availableCount = state.courses.length;
+                }
+
+                return TabBar(
+                  controller: _tab,
+                  labelColor: AppTheme.primary,
+                  unselectedLabelColor: AppTheme.textSecondary,
+                  indicatorColor: AppTheme.primary,
+                  indicatorWeight: 3,
+                  labelStyle: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700),
+                  tabs: [
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('My Courses'),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('$myCoursesCount',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Available'),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.info,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text('${_available.length}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700)),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Available'),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppTheme.info,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text('$availableCount',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // ── Stats ──────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(children: [
-              _StatChip(
-                  icon: Icons.menu_book_outlined,
-                  color: AppTheme.primary,
-                  label: 'Enrolled',
-                  value: '${_myCourses.length}'),
-              const SizedBox(width: 10),
-              _StatChip(
-                  icon: Icons.star_outline,
-                  color: AppTheme.warning,
-                  label: 'Credits',
-                  value: '$_totalCredits'),
-              const SizedBox(width: 10),
-              _StatChip(
-                  icon: Icons.check_circle_outline,
-                  color: AppTheme.success,
-                  label: 'Available',
-                  value: '${_available.length}'),
-            ]),
-          ),
-          const SizedBox(height: 14),
+      body: BlocBuilder<RegistrationBloc, RegistrationState>(
+        builder: (context, state) {
+          if (state is RegistrationInitial || state is RegistrationLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-          // ── Tab views ──────────────────────────────────────────
-          Expanded(
-            child: TabBarView(
-              controller: _tab,
+          if (state is RegistrationError) {
+            return Center(
+              child: Text(
+                'Failed to load data: ${state.message}',
+                style: TextStyle(color: txt),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          if (state is RegistrationLoaded) {
+            final myCourses = state.myCourses;
+            final allAvailable = state.courses;
+            
+            final q = _searchCtrl.text.toLowerCase();
+            final available = allAvailable.where((c) {
+              if (q.isEmpty) return true;
+              return c.course.title.toLowerCase().contains(q) ||
+                  c.course.code.toLowerCase().contains(q) ||
+                  (c.teacher?.name.toLowerCase().contains(q) ?? false);
+            }).toList();
+
+            final isRegistering = state is RegistrationActionInProgress;
+            final registeringId = isRegistering ? state.registeringCourseId : null;
+
+            return Column(
               children: [
-                // ── Tab 1: My Courses ─────────────────────────
-                _myCourses.isEmpty
-                    ? const _Empty(
-                    icon: Icons.menu_book_outlined,
-                    msg: 'No courses enrolled yet.\nSwitch to "Available" tab to add courses.')
-                    : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                  itemCount: _myCourses.length,
-                  separatorBuilder: (_, __) =>
-                  const SizedBox(height: 10),
-                  itemBuilder: (_, i) => _MyCard(
-                      c: _myCourses[i],
-                      onDrop: () => _drop(_myCourses[i])),
+                // ── Stats ──────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Row(children: [
+                    _StatChip(
+                        icon: Icons.menu_book_outlined,
+                        color: AppTheme.primary,
+                        label: 'Enrolled',
+                        value: '${myCourses.length}'),
+                    const SizedBox(width: 10),
+                    _StatChip(
+                        icon: Icons.check_circle_outline,
+                        color: AppTheme.success,
+                        label: 'Available',
+                        value: '${available.length}'),
+                  ]),
                 ),
+                const SizedBox(height: 14),
 
-                // ── Tab 2: Available ──────────────────────────
-                Column(children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: TextField(
-                      controller: _searchCtrl,
-                      onChanged: (_) => setState(() {}),
-                      style: TextStyle(color: txt),
-                      decoration: InputDecoration(
-                        hintText: 'Search courses...',
-                        hintStyle: TextStyle(color: txtSec, fontSize: 13),
-                        prefixIcon: Icon(Icons.search, color: txtSec, size: 20),
-                        filled: true,
-                        fillColor: card,
-                        contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: border),
+                // ── Tab views ──────────────────────────────────────────
+                Expanded(
+                  child: TabBarView(
+                    controller: _tab,
+                    children: [
+                      // ── Tab 1: My Courses ─────────────────────────
+                      myCourses.isEmpty
+                          ? const _Empty(
+                              icon: Icons.menu_book_outlined,
+                              msg: 'No courses enrolled yet.\nSwitch to "Available" tab to add courses.')
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                              itemCount: myCourses.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (_, i) {
+                                final c = myCourses[i];
+                                return _MyCard(
+                                  c: c,
+                                  isLoading: registeringId == c.studentCourseId,
+                                  onDrop: () => _drop(c),
+                                );
+                              },
+                            ),
+
+                      // ── Tab 2: Available ──────────────────────────
+                      Column(children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            onChanged: (_) => setState(() {}),
+                            style: TextStyle(color: txt),
+                            decoration: InputDecoration(
+                              hintText: 'Search courses...',
+                              hintStyle: TextStyle(color: txtSec, fontSize: 13),
+                              prefixIcon: Icon(Icons.search, color: txtSec, size: 20),
+                              filled: true,
+                              fillColor: card,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: border),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: border),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: AppTheme.primary, width: 2),
+                              ),
+                            ),
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: border),
+                        Expanded(
+                          child: available.isEmpty
+                              ? const _Empty(
+                                  icon: Icons.search_off,
+                                  msg: 'No courses found.')
+                              : ListView.separated(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                                  itemCount: available.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 10),
+                                  itemBuilder: (_, i) {
+                                    final c = available[i];
+                                    return _AvailCard(
+                                      c: c,
+                                      isLoading: registeringId == c.teacherCourseId,
+                                      onAdd: () => _add(c),
+                                    );
+                                  },
+                                ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                          const BorderSide(color: AppTheme.primary, width: 2),
-                        ),
-                      ),
-                    ),
+                      ]),
+                    ],
                   ),
-                  Expanded(
-                    child: _available.isEmpty
-                        ? const _Empty(
-                        icon: Icons.search_off,
-                        msg: 'No courses found.')
-                        : ListView.separated(
-                      padding:
-                      const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                      itemCount: _available.length,
-                      separatorBuilder: (_, __) =>
-                      const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _AvailCard(
-                          c: _available[i],
-                          onAdd: () => _add(_available[i])),
-                    ),
-                  ),
-                ]),
+                ),
               ],
-            ),
-          ),
-        ],
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
 }
 
-// ─── Stat chip ────────────────────────────────────────────────────
 class _StatChip extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -413,7 +367,7 @@ class _StatChip extends StatelessWidget {
     return Expanded(
       child: Container(
         padding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: card,
           borderRadius: BorderRadius.circular(12),
@@ -450,11 +404,11 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ─── My Course Card ───────────────────────────────────────────────
 class _MyCard extends StatelessWidget {
-  final _Course c;
+  final CourseInfo c;
   final VoidCallback onDrop;
-  const _MyCard({required this.c, required this.onDrop});
+  final bool isLoading;
+  const _MyCard({required this.c, required this.onDrop, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -463,6 +417,16 @@ class _MyCard extends StatelessWidget {
     final border = isDark ? AppTheme.darkBorder : AppTheme.border;
     final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
+    // Use a hash for consistent colors
+    final colors = [
+      const Color(0xFF8B5CF6),
+      const Color(0xFF3B82F6),
+      const Color(0xFF10B981),
+      const Color(0xFFF97316),
+      const Color(0xFFF59E0B),
+    ];
+    final codeColor = colors[c.code.hashCode.abs() % colors.length];
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -477,9 +441,9 @@ class _MyCard extends StatelessWidget {
           Row(children: [
             Container(
               padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: c.codeColor,
+                  color: codeColor,
                   borderRadius: BorderRadius.circular(6)),
               child: Text(c.code,
                   style: const TextStyle(
@@ -487,47 +451,49 @@ class _MyCard extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700)),
             ),
-            const SizedBox(width: 8),
-            Text('${c.credits} credits',
-                style: TextStyle(fontSize: 11, color: txtSec)),
             const Spacer(),
             GestureDetector(
-              onTap: onDrop,
+              onTap: isLoading ? null : onDrop,
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryLight,
+                  color: AppTheme.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.delete_outline,
-                    color: AppTheme.primary, size: 18),
+                child: isLoading 
+                    ? const SizedBox(
+                        width: 18, 
+                        height: 18, 
+                        child: CircularProgressIndicator(color: AppTheme.error, strokeWidth: 2)
+                      )
+                    : const Icon(Icons.delete_outline,
+                        color: AppTheme.error, size: 18),
               ),
             ),
           ]),
           const SizedBox(height: 8),
-          Text(c.name,
+          Text(c.title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: txt)),           // ← dark-aware
-          const SizedBox(height: 2),
-          Text(c.instructor,
-              style: TextStyle(fontSize: 12, color: txtSec)),  // ← dark-aware
-          const SizedBox(height: 8),
-          _InfoRow(icon: Icons.access_time_outlined, text: c.schedule, txtSec: txtSec),
-          const SizedBox(height: 4),
-          _InfoRow(icon: Icons.location_on_outlined, text: c.location, txtSec: txtSec),
+                  color: txt)),
+          if (c.description != null && c.description!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(c.description!,
+                style: TextStyle(fontSize: 12, color: txtSec)),
+          ],
         ],
       ),
     );
   }
 }
 
-// ─── Available Course Card ────────────────────────────────────────
 class _AvailCard extends StatelessWidget {
-  final _Course c;
+  final AvailableCourse c;
   final VoidCallback onAdd;
-  const _AvailCard({required this.c, required this.onAdd});
+  final bool isLoading;
+  
+  const _AvailCard({required this.c, required this.onAdd, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -537,20 +503,31 @@ class _AvailCard extends StatelessWidget {
     final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
 
-    final pct = c.enrolled / c.capacity;
-    final almostFull = pct >= 0.8 && !c.isFull;
-    final barColor = c.isFull
+    final capacity = c.capacity > 0 ? c.capacity : 1; // avoid div by 0
+    final pct = c.enrolledCount / capacity;
+    final isFull = c.enrolledCount >= c.capacity;
+    final almostFull = pct >= 0.8 && !isFull;
+    final barColor = isFull
         ? AppTheme.primary
         : almostFull
-        ? AppTheme.warning
-        : AppTheme.success;
+            ? AppTheme.warning
+            : AppTheme.success;
+
+    final colors = [
+      const Color(0xFF8B5CF6),
+      const Color(0xFF3B82F6),
+      const Color(0xFF10B981),
+      const Color(0xFFF97316),
+      const Color(0xFFF59E0B),
+    ];
+    final codeColor = colors[c.course.code.hashCode.abs() % colors.length];
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: card,                          // ← dark-aware
+        color: card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: border),    // ← dark-aware
+        border: Border.all(color: border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,79 +535,108 @@ class _AvailCard extends StatelessWidget {
           Row(children: [
             Container(
               padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: c.codeColor,
+                  color: codeColor,
                   borderRadius: BorderRadius.circular(6)),
-              child: Text(c.code,
+              child: Text(c.course.code,
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
                       fontWeight: FontWeight.w700)),
             ),
             const SizedBox(width: 8),
-            Text('${c.credits} credits',
-                style: TextStyle(fontSize: 11, color: txtSec)),  // ← dark-aware
+            Text('${c.course.creditHours} credits',
+                style: TextStyle(fontSize: 11, color: txtSec)),
             const SizedBox(width: 8),
-            // status badge
             Container(
               padding:
-              const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: c.isFull
-                    ? AppTheme.primary.withOpacity(0.1)
-                    : AppTheme.success.withOpacity(0.1),
+                color: isFull
+                    ? AppTheme.primary.withValues(alpha: 0.1)
+                    : AppTheme.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: c.isFull
-                        ? AppTheme.primary.withOpacity(0.3)
-                        : AppTheme.success.withOpacity(0.3)),
+                    color: isFull
+                        ? AppTheme.primary.withValues(alpha: 0.3)
+                        : AppTheme.success.withValues(alpha: 0.3)),
               ),
               child: Text(
-                c.isFull ? 'Full' : 'Available',
+                isFull ? 'Full' : 'Available',
                 style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: c.isFull ? AppTheme.primary : AppTheme.success),
+                    color: isFull ? AppTheme.primary : AppTheme.success),
               ),
             ),
             const Spacer(),
             GestureDetector(
-              onTap: c.isFull ? null : onAdd,
+              onTap: (!c.canRegister || isFull || isLoading) ? null : onAdd,
               child: Container(
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: c.isFull ? AppTheme.border : AppTheme.primary,
+                  color: (!c.canRegister || isFull) ? AppTheme.border : AppTheme.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.add,
-                    color: c.isFull ? AppTheme.textLight : Colors.white,
-                    size: 20),
+                child: isLoading 
+                    ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Icon(Icons.add,
+                        color: (!c.canRegister || isFull) ? AppTheme.textLight : Colors.white,
+                        size: 20),
               ),
             ),
           ]),
           const SizedBox(height: 8),
-          Text(c.name,
+          Text(c.course.title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: txt)),           // ← dark-aware
+                  color: txt)),
           const SizedBox(height: 2),
-          Text(c.instructor,
-              style: TextStyle(fontSize: 12, color: txtSec)),  // ← dark-aware
+          Text(c.teacher?.name ?? 'TBA',
+              style: TextStyle(fontSize: 12, color: txtSec)),
           const SizedBox(height: 8),
-          _InfoRow(icon: Icons.access_time_outlined, text: c.schedule, txtSec: txtSec),
+          _InfoRow(icon: Icons.access_time_outlined, text: c.schedule ?? 'TBA', txtSec: txtSec),
           const SizedBox(height: 4),
-          _InfoRow(icon: Icons.location_on_outlined, text: c.location, txtSec: txtSec),
+          _InfoRow(icon: Icons.location_on_outlined, text: c.room ?? 'TBA', txtSec: txtSec),
+          
+          if (!c.canRegister && c.validationErrors.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline, size: 14, color: AppTheme.error),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      c.validationErrors.first,
+                      style: const TextStyle(fontSize: 11, color: AppTheme.error),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
           const SizedBox(height: 10),
-          // enrollment bar
           Row(
             children: [
               Icon(Icons.people_outline, size: 13, color: txtSec),
               const SizedBox(width: 4),
               Text(
-                '${c.enrolled}/${c.capacity} enrolled',
+                '${c.enrolledCount}/${c.capacity} enrolled',
                 style: TextStyle(
                     fontSize: 11,
                     color: almostFull ? AppTheme.warning : txtSec,
@@ -646,7 +652,7 @@ class _AvailCard extends StatelessWidget {
               minHeight: 6,
               backgroundColor: isDark
                   ? AppTheme.darkBorder
-                  : const Color(0xFFE5E7EB),     // ← dark-aware
+                  : const Color(0xFFE5E7EB),
               valueColor: AlwaysStoppedAnimation<Color>(barColor),
             ),
           ),
@@ -656,7 +662,6 @@ class _AvailCard extends StatelessWidget {
   }
 }
 
-// ─── Shared info row ──────────────────────────────────────────────
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -675,13 +680,12 @@ class _InfoRow extends StatelessWidget {
       Flexible(
         child: Text(text,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 12, color: txtSec)),  // ← dark-aware
+            style: TextStyle(fontSize: 12, color: txtSec)),
       ),
     ]);
   }
 }
 
-// ─── Empty state ──────────────────────────────────────────────────
 class _Empty extends StatelessWidget {
   final IconData icon;
   final String msg;

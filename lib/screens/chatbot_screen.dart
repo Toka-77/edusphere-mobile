@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../app_theme.dart';
 import 'home_screen.dart';
+import '../logic/chatbot/chatbot_bloc.dart';
+import '../logic/chatbot/chatbot_event.dart';
+import '../logic/chatbot/chatbot_state.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_state.dart';
 
 class ChatbotScreen extends StatefulWidget {
   const ChatbotScreen({super.key});
@@ -9,13 +15,16 @@ class ChatbotScreen extends StatefulWidget {
   State<ChatbotScreen> createState() => _ChatbotScreenState();
 }
 
-class _ChatbotScreenState extends State<ChatbotScreen> {
+class _ChatbotScreenState extends State<ChatbotScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isTyping = false;
+
   final List<_ChatMessage> _messages = [
     const _ChatMessage(
       text:
-      "Hello! I'm EduSphere AI Assistant 🎓\nI can help you with grades, assignments, timetable, deadlines, academic advice, and more.\nWhat can I help you with today?",
+          "Hello! I'm EduSphere AI Assistant 🎓\nI can help you with grades, assignments, timetable, deadlines, academic advice, and more.\nWhat can I help you with today?",
       isUser: false,
     ),
   ];
@@ -28,55 +37,44 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     'Help',
   ];
 
-  static final Map<String, String> _responses = {
-    'assignment': '📝 Your next assignment is **Web Development Project 3** for CS401, due Dec 15 at 11:59 PM. You have 4 pending assignments in total.',
-    'grade': '📊 Your current GPA is **3.61 / 4.0**. You have an A in CS401 (95%), B+ in MATH301 (88%), and A- in ENG201 (92%).',
-    'schedule': '📅 Today\'s classes:\n• 09:00 AM — Advanced Web Dev (Tech Building 201)\n• 11:00 AM — Database Systems (Tech Building 305)\n• 02:00 PM — Machine Learning (AI Lab 401)',
-    'gpa': '💡 Tips to improve your GPA:\n1. Attend all classes and review notes regularly\n2. Submit assignments early\n3. Use office hours with professors\n4. Form study groups with classmates',
-    'service': '🛎️ Available services:\n• Medical Excuses\n• Complaints\n• Academic Warnings\n• Official Requests\nGo to Student Services to access them all.',
-    'default': "I understand you're asking about that. Let me help! For detailed information, please check the relevant section of EduSphere or contact your academic advisor. Is there anything more specific I can assist you with?",
-  };
+  // Typing dots animation
+  late final AnimationController _dotsController;
 
-  String _getResponse(String input) {
-    final lower = input.toLowerCase();
-    if (lower.contains('hello') || lower.contains('hey')) {
-      return "Hello! 👋 Welcome to EduSphere! How can I assist you today?";
-    } else if (lower.contains('hi')) {
-      return "Hi there! 😊 I'm your EduSphere AI assistant. What would you like to know?";
-    } else if (lower.contains('grade') || lower.contains('mark')) {
-      return "📊 Your current GPA is 3.82/4.0. You have 4 courses this semester. Would you like details on a specific course?";
-    } else if (lower.contains('schedule') || lower.contains('timetable') || lower.contains('class')) {
-      return "📅 Your next class is Advanced Web Development (CS431) at 10:00 AM in Room B-204. Check the Timetable for your full schedule.";
-    } else if (lower.contains('attend')) {
-      return "✅ Your overall attendance rate is 87%. You have 3 pending absences in ENG101. Please submit any medical excuses soon.";
-    } else if (lower.contains('help') || lower.contains('what can')) {
-      return "I can help you with:\n• 📊 Grades & GPA\n• 📅 Class schedule\n• 📋 Attendance status\n• 📚 Course information\n• 🎓 Graduation requirements\n• 💡 General questions";
-    } else if (lower.contains('gpa') || lower.contains('my gpa')) {
-      return "🎓 Your current GPA is 3.82/4.0 — Great Standing! You need 45 more credit hours to graduate.";
-    } else if (lower.contains('course') || lower.contains('enrolled')) {
-      return "📚 This semester you're enrolled in:\n• CS5402 - Advanced Software Engineering\n• CS412 - Database Systems II\n• MATH301 - Discrete Mathematics\n• HUM401 - Professional Ethics";
-    } else if (lower.contains('assignment') || lower.contains('homework')) {
-      return "📝 You have 2 upcoming assignments:\n• Web Development Project 3 (due tomorrow)\n• Database Lab Report (due in 3 days)";
-    } else if (lower.contains('deadline') || lower.contains('due')) {
-      return "⏰ Upcoming deadlines:\n• Assignment due: Tomorrow - CS431\n• Lab Report: Dec 15 - CS412\n• Final Submission: Dec 20 - MATH301";
-    }
-    return "I'm here to help! You can ask me about your courses, grades, schedule, or any academic questions.";
+  @override
+  void initState() {
+    super.initState();
+    _dotsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    _dotsController.dispose();
+    super.dispose();
   }
 
   void _send(String text) {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty || _isTyping) return;
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
+    final studentId = authState.user.studentNumericId;
+    if (studentId == null) return;
+
     setState(() {
       _messages.add(_ChatMessage(text: text.trim(), isUser: true));
+      _isTyping = true;
     });
     _controller.clear();
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      setState(() {
-        _messages.add(_ChatMessage(text: _getResponse(text), isUser: false));
-      });
-      Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
-    });
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+
+    context.read<ChatbotBloc>().add(
+          SendChatMessage(studentId: studentId, message: text.trim()),
+        );
   }
 
   void _scrollToBottom() {
@@ -90,290 +88,390 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppTheme.darkCard : Colors.white;
     final borderColor = isDark ? AppTheme.darkBorder : AppTheme.border;
     final bgColor = isDark ? AppTheme.darkBg : AppTheme.background;
-
     final txtColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        backgroundColor: cardColor,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: txtColor),
-          onPressed: HomeScreen.openDrawer,
-        ),
-        title: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.primary, AppTheme.primaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.smart_toy_outlined,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'AI Assistant',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: txtColor,
+    // Pull initials from authenticated user
+    final authState = context.watch<AuthBloc>().state;
+    final initials = authState is AuthAuthenticated
+        ? authState.user.initials
+        : '??';
+
+    return BlocListener<ChatbotBloc, ChatbotState>(
+      listener: (context, state) {
+        if (state is ChatbotResponseReceived) {
+          setState(() {
+            _isTyping = false;
+            _messages
+                .add(_ChatMessage(text: state.response, isUser: false));
+          });
+          Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+        } else if (state is ChatbotError) {
+          setState(() {
+            _isTyping = false;
+            _messages.add(const _ChatMessage(
+              text:
+                  '⚠️ Sorry, I couldn\'t reach the AI right now. Please check your connection and try again.',
+              isUser: false,
+            ));
+          });
+          Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        appBar: AppBar(
+          backgroundColor: cardColor,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: txtColor),
+            onPressed: HomeScreen.openDrawer,
+          ),
+          title: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primaryDark],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                Row(
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.success,
-                        shape: BoxShape.circle,
+                child: const Icon(Icons.smart_toy_outlined,
+                    color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI Assistant',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: txtColor,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.success,
+                          shape: BoxShape.circle,
+                        ),
                       ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Online • EduSphere AI',
+                        style: TextStyle(fontSize: 11, color: txtSec),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: txtColor),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              onSelected: (v) {
+                if (v == 'clear') {
+                  setState(() {
+                    _messages.clear();
+                    _isTyping = false;
+                    _messages.add(const _ChatMessage(
+                      text:
+                          "Hello! I'm EduSphere AI Assistant 🎓\nHow can I help you today?",
+                      isUser: false,
+                    ));
+                  });
+                } else if (v == 'about') {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: cardColor,
+                      title: Text('EduSphere AI',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700, color: txtColor)),
+                      content: Text(
+                        'EduSphere AI is your personal academic advisor powered by real-time AI.\nAsk about grades, schedule, attendance, course recommendations, and more.',
+                        style: TextStyle(color: txtSec, fontSize: 13),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Got it',
+                              style: TextStyle(color: AppTheme.primary)),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Online • EduSphere AI',
-                      style: TextStyle(fontSize: 11, color: txtSec),
-                    ),
-                  ],
+                  );
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'clear',
+                  child: Row(children: [
+                    Icon(Icons.delete_outline,
+                        color: AppTheme.primary, size: 18),
+                    SizedBox(width: 10),
+                    Text('Clear Chat'),
+                  ]),
+                ),
+                PopupMenuItem(
+                  value: 'about',
+                  child: Row(children: [
+                    Icon(Icons.info_outline, size: 18),
+                    SizedBox(width: 10),
+                    Text('About AI'),
+                  ]),
                 ),
               ],
             ),
           ],
         ),
-        actions: [
-          // ⋮ 3-dot menu
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: txtColor),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
-            onSelected: (v) {
-              if (v == 'clear') {
-                setState(() {
-                  _messages.clear();
-                  _messages.add(const _ChatMessage(
-                    text:
-                    "Hello! I'm EduSphere AI Assistant 🎓\nHow can I help you today?",
-                    isUser: false,
-                  ));
-                });
-              } else if (v == 'export') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Chat exported to clipboard'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              } else if (v == 'about') {
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    backgroundColor: cardColor,
-                    title: Text('EduSphere AI',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: txtColor)),
-                    content: Text(
-                      'EduSphere AI is your personal academic assistant. Ask about grades, schedule, attendance, and more.',
-                      style: TextStyle(color: txtSec, fontSize: 13),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Got it',
-                            style: TextStyle(color: AppTheme.primary)),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'clear',
-                child: Row(children: [
-                  Icon(Icons.delete_outline,
-                      color: AppTheme.primary, size: 18),
-                  SizedBox(width: 10),
-                  Text('Clear Chat'),
-                ]),
+        body: Column(
+          children: [
+            // ── Chat messages ──────────────────────────────────────────
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: _messages.length + (_isTyping ? 1 : 0),
+                itemBuilder: (context, i) {
+                  if (_isTyping && i == _messages.length) {
+                    return _buildTypingBubble(isDark, cardColor, borderColor);
+                  }
+                  final msg = _messages[i];
+                  return _buildBubble(
+                      msg, isDark, cardColor, borderColor, initials);
+                },
               ),
-              PopupMenuItem(
-                value: 'export',
-                child: Row(children: [
-                  Icon(Icons.ios_share_outlined, size: 18),
-                  SizedBox(width: 10),
-                  Text('Export Chat'),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'about',
-                child: Row(children: [
-                  Icon(Icons.info_outline, size: 18),
-                  SizedBox(width: 10),
-                  Text('About AI'),
-                ]),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Chat messages
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, i) {
-                final msg = _messages[i];
-                return _buildBubble(msg, isDark, cardColor, borderColor);
-              },
             ),
-          ),
 
-          // Quick replies — always visible (matches web's chatbot-quick always shown)
-          Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border(top: BorderSide(color: borderColor)),
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Quick Questions',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppTheme.darkTextSec : AppTheme.textSecondary,
+            // ── Quick replies ──────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border(top: BorderSide(color: borderColor)),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quick Questions',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppTheme.darkTextSec
+                          : AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _quickReplies
-                        .map(
-                          (q) => Padding(
-                        padding: const EdgeInsets.only(right: 8, bottom: 6),
-                        child: GestureDetector(
-                          onTap: () => _send(q),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppTheme.primary.withValues(alpha: 0.12)
-                                  : AppTheme.primaryLight,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                  color: AppTheme.primary
-                                      .withValues(alpha: 0.3)),
-                            ),
-                            child: Text(
-                              q,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.primary,
-                                fontWeight: FontWeight.w500,
+                  const SizedBox(height: 6),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _quickReplies
+                          .map(
+                            (q) => Padding(
+                              padding:
+                                  const EdgeInsets.only(right: 8, bottom: 6),
+                              child: GestureDetector(
+                                onTap: () => _send(q),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppTheme.primary
+                                            .withValues(alpha: 0.12)
+                                        : AppTheme.primaryLight,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: AppTheme.primary
+                                            .withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    q,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Input bar ─────────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                border: Border(top: BorderSide(color: borderColor)),
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      enabled: !_isTyping,
+                      onSubmitted: _send,
+                      style: TextStyle(
+                        color:
+                            isDark ? AppTheme.darkText : AppTheme.textPrimary,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: _isTyping
+                            ? 'AI is thinking…'
+                            : 'Ask me anything about EduSphere...',
+                        hintStyle: TextStyle(
+                            color: isDark
+                                ? AppTheme.darkTextSec
+                                : AppTheme.textLight,
+                            fontSize: 13),
+                        filled: true,
+                        fillColor:
+                            isDark ? AppTheme.darkBg : AppTheme.background,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: const BorderSide(
+                              color: AppTheme.primary, width: 1.5),
+                        ),
+                        disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(
+                              color: borderColor.withValues(alpha: 0.5)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _isTyping ? null : () => _send(_controller.text),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: _isTyping
+                            ? AppTheme.primary.withValues(alpha: 0.4)
+                            : AppTheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.send_rounded,
+                          color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Animated "AI is typing…" bubble with three bouncing dots.
+  Widget _buildTypingBubble(
+      bool isDark, Color cardColor, Color borderColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primary, AppTheme.primaryDark],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.smart_toy_outlined,
+                color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(16).copyWith(
+                bottomLeft: const Radius.circular(4),
+              ),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: AnimatedBuilder(
+              animation: _dotsController,
+              builder: (_, __) {
+                final t = _dotsController.value;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(3, (i) {
+                    // Each dot peaks at t = i/3 … (i+1)/3
+                    final offset = ((t - i * 0.33) % 1.0).clamp(0.0, 1.0);
+                    final scale = 1.0 + 0.5 * (offset < 0.5
+                        ? offset * 2
+                        : (1.0 - offset) * 2);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Transform.scale(
+                        scale: scale,
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary
+                                .withValues(alpha: 0.6 + 0.4 * (scale - 1)),
+                            shape: BoxShape.circle,
                           ),
                         ),
                       ),
-                    )
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Input bar
-          Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              border: Border(top: BorderSide(color: borderColor)),
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    onSubmitted: _send,
-                    style: TextStyle(
-                      color: isDark ? AppTheme.darkText : AppTheme.textPrimary,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Ask me anything about EduSphere...',
-                      hintStyle: TextStyle(
-                          color: isDark ? AppTheme.darkTextSec : AppTheme.textLight,
-                          fontSize: 13),
-                      filled: true,
-                      fillColor: isDark
-                          ? AppTheme.darkBg
-                          : AppTheme.background,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide:
-                        const BorderSide(color: AppTheme.primary, width: 1.5),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () => _send(_controller.text),
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.send_rounded,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-              ],
+                    );
+                  }),
+                );
+              },
             ),
           ),
         ],
@@ -381,14 +479,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     );
   }
 
-  Widget _buildBubble(
-      _ChatMessage msg, bool isDark, Color cardColor, Color borderColor) {
+  Widget _buildBubble(_ChatMessage msg, bool isDark, Color cardColor,
+      Color borderColor, String initials) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
-        msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!msg.isUser) ...[
             Container(
@@ -415,18 +513,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 11),
                   decoration: BoxDecoration(
-                    color: msg.isUser
-                        ? AppTheme.primary
-                        : cardColor,
+                    color: msg.isUser ? AppTheme.primary : cardColor,
                     borderRadius: BorderRadius.circular(16).copyWith(
                       bottomRight:
-                      msg.isUser ? const Radius.circular(4) : null,
+                          msg.isUser ? const Radius.circular(4) : null,
                       bottomLeft:
-                      !msg.isUser ? const Radius.circular(4) : null,
+                          !msg.isUser ? const Radius.circular(4) : null,
                     ),
-                    border: msg.isUser
-                        ? null
-                        : Border.all(color: borderColor),
+                    border:
+                        msg.isUser ? null : Border.all(color: borderColor),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -443,8 +538,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       color: msg.isUser
                           ? Colors.white
                           : (isDark
-                          ? AppTheme.darkText
-                          : AppTheme.textPrimary),
+                              ? AppTheme.darkText
+                              : AppTheme.textPrimary),
                     ),
                   ),
                 ),
@@ -463,12 +558,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
           if (msg.isUser) ...[
             const SizedBox(width: 10),
-            const CircleAvatar(
+            CircleAvatar(
               radius: 17,
               backgroundColor: AppTheme.primaryLight,
               child: Text(
-                'TK',
-                style: TextStyle(
+                initials,
+                style: const TextStyle(
                   color: AppTheme.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 11,

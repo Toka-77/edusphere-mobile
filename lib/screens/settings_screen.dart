@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../app_theme.dart';
 import '../locale_provider.dart';
-import 'login_screen.dart';
 import 'home_screen.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_event.dart';
+import '../logic/auth/auth_state.dart';
+import '../data/services/auth_service.dart';
+import '../logic/dashboard/dashboard_bloc.dart';
+import '../logic/dashboard/dashboard_state.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -31,17 +37,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _newPwController = TextEditingController();
   final _confPwController = TextEditingController();
   bool _pwSaved = false;
+  bool _isSavingPw = false;
+  String? _pwError;
 
-  // Profile fields
-  final _fullNameController = TextEditingController(text: 'TOKA KHALED');
-  final _studentIdController = TextEditingController(text: '21at41');
-  final _emailFieldController =
-      TextEditingController(text: 'toka@edusphere.edu');
-  final _phoneController = TextEditingController(text: '+20 100 000 0000');
-  final _facultyController =
-      TextEditingController(text: 'Engineering & Technology');
-  final _programController =
-      TextEditingController(text: 'B.Sc. Computer Science');
+  // Profile save
+  bool _isSavingProfile = false;
+  bool _profileSaved = false;
+
+  // Profile fields (populated from AuthBloc in initState)
+  final _fullNameController = TextEditingController();
+  final _studentIdController = TextEditingController();
+  final _emailFieldController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _programController = TextEditingController();
 
   // Active sessions
   final List<Map<String, dynamic>> _sessions = [
@@ -59,17 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     },
   ];
 
-  // Academic info
-  final Map<String, String> _acadInfo = {
-    'gpa': '3.82',
-    'credits': '75',
-    'totalCredits': '120',
-    'standing': 'Good Standing',
-    'advisor': 'Dr. Ahmed Hassan',
-    'gradDate': 'June 2026',
-    'major': 'Computer Science',
-    'minor': 'Mathematics',
-  };
+
 
   final List<Map<String, String>> _languages = const [
     {'label': 'English', 'flag': '🇬🇧', 'code': 'en'},
@@ -86,23 +84,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _logout() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
-    );
+    context.read<AuthBloc>().add(LogoutRequested());
   }
 
-  void _handleSavePw() {
-    if (_newPwController.text.length >= 4 &&
-        _newPwController.text == _confPwController.text) {
-      setState(() => _pwSaved = true);
-      Future.delayed(const Duration(seconds: 3),
-          () => mounted ? setState(() => _pwSaved = false) : null);
+  Future<void> _handleSavePw() async {
+    final current = _oldPwController.text.trim();
+    final newPw  = _newPwController.text.trim();
+    final confirm = _confPwController.text.trim();
+    if (current.isEmpty) {
+      setState(() => _pwError = 'Please enter your current password.');
+      return;
+    }
+    if (newPw.length < 8) {
+      setState(() => _pwError = 'New password must be at least 8 characters.');
+      return;
+    }
+    if (newPw != confirm) {
+      setState(() => _pwError = 'Passwords do not match.');
+      return;
+    }
+    setState(() { _isSavingPw = true; _pwError = null; });
+    try {
+      await context.read<AuthService>().changePassword(
+        currentPassword: current,
+        newPassword: newPw,
+        newPasswordConfirmation: confirm,
+      );
+      setState(() { _pwSaved = true; _isSavingPw = false; });
       _oldPwController.clear();
       _newPwController.clear();
       _confPwController.clear();
+      Future.delayed(const Duration(seconds: 3),
+          () => mounted ? setState(() => _pwSaved = false) : null);
+    } catch (e) {
+      setState(() {
+        _pwError = e.toString().replaceAll('Exception: ', '');
+        _isSavingPw = false;
+      });
     }
+  }
+
+  Future<void> _handleSaveProfile() async {
+    final name = _fullNameController.text.trim();
+    if (name.isEmpty) return;
+    setState(() => _isSavingProfile = true);
+    try {
+      await context.read<AuthService>().updateProfile(name);
+      setState(() { _profileSaved = true; _isSavingProfile = false; });
+      Future.delayed(const Duration(seconds: 3),
+          () => mounted ? setState(() => _profileSaved = false) : null);
+    } catch (e) {
+      setState(() => _isSavingProfile = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final s = context.read<AuthBloc>().state;
+      if (s is AuthAuthenticated) {
+        final u = s.user;
+        _fullNameController.text = u.name;
+        _studentIdController.text = u.studentCode ?? '';
+        _emailFieldController.text = u.email;
+        _phoneController.text = u.phones.isNotEmpty ? u.phones.first : '';
+        _programController.text = u.program ?? '';
+      }
+    });
   }
 
   @override
@@ -114,7 +169,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _studentIdController.dispose();
     _emailFieldController.dispose();
     _phoneController.dispose();
-    _facultyController.dispose();
     _programController.dispose();
     super.dispose();
   }
@@ -263,6 +317,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ═══════════════════════════════════════════════════════════════
   Widget _buildProfile(
       Color cardColor, Color borderColor, Color txtColor, Color txtSec) {
+    final authState = context.read<AuthBloc>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final initials = user?.initials ?? '?';
+    final displayName = user?.name ?? '';
+    final displayEmail = user?.email ?? '';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -279,15 +339,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [AppTheme.primary, AppTheme.primaryDark],
                   ),
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
-                  child: Text('TK',
-                      style: TextStyle(
+                child: Center(
+                  child: Text(initials,
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.w800)),
@@ -297,12 +357,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TOKA KHALED',
+                  Text(displayName,
                       style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
                           color: txtColor)),
-                  Text('toka@edusphere.edu',
+                  Text(displayEmail,
                       style: TextStyle(fontSize: 12, color: txtSec)),
                 ],
               ),
@@ -310,19 +370,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Profile fields - read only (managed by university)
+          // Name is editable
           ..._profileField('Full Name', _fullNameController, txtColor, txtSec,
-              cardColor, borderColor, readOnly: true),
+              cardColor, borderColor, readOnly: false),
           ..._profileField('Student ID', _studentIdController, txtColor,
               txtSec, cardColor, borderColor, readOnly: true),
           ..._profileField('Email', _emailFieldController, txtColor, txtSec,
               cardColor, borderColor, readOnly: true),
           ..._profileField('Phone', _phoneController, txtColor, txtSec,
-              cardColor, borderColor, readOnly: false),
-          ..._profileField('Faculty', _facultyController, txtColor, txtSec,
               cardColor, borderColor, readOnly: true),
           ..._profileField('Program', _programController, txtColor, txtSec,
               cardColor, borderColor, readOnly: true),
+
+          if (_profileSaved)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text('✅ Name updated successfully!',
+                  style: TextStyle(
+                      color: AppTheme.success,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+            ),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ElevatedButton(
+              onPressed: _isSavingProfile ? null : _handleSaveProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: _isSavingProfile
+                  ? const SizedBox(
+                      width: 18, height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Save Name',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: 12),
 
           // Note about read-only fields
           Container(
@@ -425,10 +512,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   cardColor, borderColor),
               _secField('Confirm Password', _confPwController, txtColor,
                   txtSec, cardColor, borderColor),
+              if (_pwError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(_pwError!,
+                      style: const TextStyle(
+                          color: AppTheme.error,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600)),
+                ),
               if (_pwSaved)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8),
-                  child: Text('✅ Password updated successfully!',
+                  child: Text('\u2705 Password updated successfully!',
                       style: TextStyle(
                           color: Color(0xFF00E676),
                           fontSize: 13,
@@ -437,7 +533,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: ElevatedButton(
-                  onPressed: _handleSavePw,
+                  onPressed: _isSavingPw ? null : _handleSavePw,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(
@@ -445,9 +541,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Save Password',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, color: Colors.white)),
+                  child: _isSavingPw
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Save Password',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
                 ),
               ),
             ],
@@ -872,17 +974,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ═══════════════════════════════════════════════════════════════
   Widget _buildAcademic(
       Color cardColor, Color borderColor, Color txtColor, Color txtSec) {
+    final authState = context.read<AuthBloc>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final dashState = context.read<DashboardBloc>().state;
+    final gpa = dashState is DashboardLoaded
+        ? dashState.data.cgpa.toStringAsFixed(2) : '-';
+    final credits = user?.creditHours?.toString() ?? '-';
+    final totalCredits = dashState is DashboardLoaded
+        ? dashState.data.requiredCredits.toString() : '120';
+    final program  = user?.program ?? '-';
+    final level    = user?.level != null ? 'Level ${user!.level}' : '-';
+    final standing = (user?.isHonor == true) ? 'Honor Roll' : 'Good Standing';
+
     final items = [
-      ['🎓 Current GPA', '${_acadInfo['gpa']} / 4.0', const Color(0xFF00C853)],
-      [
-        '📚 Credits Earned',
-        '${_acadInfo['credits']} / ${_acadInfo['totalCredits']}',
-        const Color(0xFF2979FF)
-      ],
-      ['🏅 Academic Standing', _acadInfo['standing']!, const Color(0xFFFF6D00)],
-      ['👨‍🏫 Academic Advisor', _acadInfo['advisor']!, txtColor],
-      ['📅 Expected Graduation', _acadInfo['gradDate']!, txtColor],
-      ['📖 Major', _acadInfo['major']!, txtColor],
+      ['🎓 Current GPA', '$gpa / 4.0', const Color(0xFF00C853)],
+      ['📚 Credits Earned', '$credits / $totalCredits', const Color(0xFF2979FF)],
+      ['🏅 Academic Standing', standing, const Color(0xFFFF6D00)],
+      ['🎖️ Level', level, txtColor],
+      ['📖 Program', program, txtColor],
     ];
 
     return Container(

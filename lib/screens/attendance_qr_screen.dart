@@ -2,9 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../app_theme.dart';
 import '../locale_provider.dart';
 import 'home_screen.dart';
+import '../logic/attendance/attendance_bloc.dart';
+import '../logic/attendance/attendance_event.dart';
+import '../logic/attendance/attendance_state.dart';
+import '../data/models/attendance_model.dart';
 
 class AttendanceQRScreen extends StatefulWidget {
   const AttendanceQRScreen({super.key});
@@ -35,6 +40,8 @@ class _AttendanceQRScreenState extends State<AttendanceQRScreen>
       duration: const Duration(seconds: 2),
     );
     _startQRTimer();
+    // Reset bloc state when entering screen
+    context.read<AttendanceBloc>().add(const ResetAttendance());
   }
 
   void _startQRTimer() {
@@ -103,12 +110,9 @@ class _AttendanceQRScreenState extends State<AttendanceQRScreen>
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         _scanLineController.stop();
-        setState(() {
-          _scanning = false;
-          _scanComplete = true;
-          _scannedData = 'CS402-LECTURE-2025-10-15';
-        });
         _qrTimer?.cancel();
+        // Submit simulated token
+        context.read<AttendanceBloc>().add(const SubmitQRToken('simulated-token-123'));
       }
     });
   }
@@ -119,11 +123,7 @@ class _AttendanceQRScreenState extends State<AttendanceQRScreen>
     if (barcode != null && barcode.rawValue != null) {
       _cameraController?.stop();
       _qrTimer?.cancel();
-      setState(() {
-        _scanning = false;
-        _scanComplete = true;
-        _scannedData = barcode.rawValue!;
-      });
+      context.read<AttendanceBloc>().add(SubmitQRToken(barcode.rawValue!));
     }
   }
 
@@ -136,7 +136,101 @@ class _AttendanceQRScreenState extends State<AttendanceQRScreen>
       _scanComplete = false;
       _scannedData = '';
     });
+    context.read<AttendanceBloc>().add(const ResetAttendance());
     _startQRTimer();
+  }
+
+  void _showHistoryBottomSheet(BuildContext context) {
+    context.read<AttendanceBloc>().add(const LoadAttendanceHistory());
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final bg = isDark ? AppTheme.darkCard : Colors.white;
+        final txt = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+        final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
+
+        return Container(
+          height: MediaQuery.of(ctx).size.height * 0.7,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Attendance History',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
+                    IconButton(
+                      icon: Icon(Icons.close, color: txtSec),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: BlocBuilder<AttendanceBloc, AttendanceState>(
+                  builder: (context, state) {
+                    if (state is AttendanceHistoryLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is AttendanceHistoryLoaded) {
+                      if (state.records.isEmpty) {
+                        return Center(
+                          child: Text('No attendance records found.',
+                              style: TextStyle(color: txtSec)),
+                        );
+                      }
+                      return ListView.builder(
+                        itemCount: state.records.length,
+                        itemBuilder: (context, index) {
+                          final record = state.records[index];
+                          return ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: AppTheme.success,
+                              child: Icon(Icons.check, color: Colors.white, size: 20),
+                            ),
+                            title: Text(record.courseName ?? 'Unknown Course',
+                                style: TextStyle(color: txt, fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                                '${record.courseCode ?? ''} • ${record.sessionDate ?? ''}\n${record.instructor ?? ''}',
+                                style: TextStyle(color: txtSec)),
+                            isThreeLine: true,
+                            trailing: Text(
+                              record.status.toUpperCase(),
+                              style: const TextStyle(
+                                  color: AppTheme.success,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12),
+                            ),
+                          );
+                        },
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   String _currentTimeLocalized() {
@@ -166,522 +260,579 @@ class _AttendanceQRScreenState extends State<AttendanceQRScreen>
     final txtSec = isDark ? AppTheme.darkTextSec : AppTheme.textSecondary;
     final txtLight = isDark ? AppTheme.darkTextLight : AppTheme.textLight;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: card,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: txt),
-          onPressed: HomeScreen.openDrawer,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('QR Attendance',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
-            Text('EduSphere Smart Attendance System',
-                style: TextStyle(fontSize: 11, color: txtSec)),
-          ],
-        ),
-        actions: [
-          // ── QR Timer Badge ──────────────────────────────────
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: (_qrExpired ? AppTheme.primary : _timerColor).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
+    return BlocConsumer<AttendanceBloc, AttendanceState>(
+      listener: (context, state) {
+        if (state is AttendanceSuccess) {
+          setState(() {
+            _scanning = false;
+            _scanComplete = true;
+            _scannedData = state.result.courseName ?? 'Attendance Recorded';
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.result.message),
+              backgroundColor: AppTheme.success,
+              behavior: SnackBarBehavior.floating,
             ),
-            child: Row(
+          );
+        } else if (state is AttendanceError) {
+          setState(() {
+            _scanning = false;
+            _scanComplete = false;
+          });
+          _startQRTimer();
+          if (!kIsWeb) {
+            _cameraController?.start();
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppTheme.primary,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isSubmitting = state is AttendanceSubmitting;
+
+        return Scaffold(
+          backgroundColor: bg,
+          appBar: AppBar(
+            backgroundColor: card,
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: Icon(Icons.menu, color: txt),
+              onPressed: HomeScreen.openDrawer,
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  _qrExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
-                  size: 14,
-                  color: _qrExpired ? AppTheme.primary : _timerColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _qrExpired ? 'Expired' : 'Expires in $_timerStr',
-                  style: TextStyle(
-                    color: _qrExpired ? AppTheme.primary : _timerColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text('QR Attendance',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: txt)),
+                Text('EduSphere Smart Attendance System',
+                    style: TextStyle(fontSize: 11, color: txtSec)),
               ],
             ),
-          ),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: txt),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            onSelected: (v) {
-              if (v == 'reset') {
-                _resetScan();
-              } else if (v == 'history') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Attendance history coming soon'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              } else if (v == 'help') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Point your camera at the QR code displayed by your instructor.'),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'reset',
-                child: Row(children: [
-                  Icon(Icons.refresh_outlined, size: 18),
-                  SizedBox(width: 10),
-                  Text('Reset Scanner'),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'history',
-                child: Row(children: [
-                  Icon(Icons.history_outlined, size: 18),
-                  SizedBox(width: 10),
-                  Text('View History'),
-                ]),
-              ),
-              PopupMenuItem(
-                value: 'help',
-                child: Row(children: [
-                  Icon(Icons.help_outline, size: 18),
-                  SizedBox(width: 10),
-                  Text('How to Scan'),
-                ]),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // ── Expired Banner ──────────────────────────────────
-            if (_qrExpired)
+            actions: [
+              // ── QR Timer Badge ──────────────────────────────────
               Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+                  color: (_qrExpired ? AppTheme.primary : _timerColor).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.timer_off_outlined, color: AppTheme.primary, size: 22),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('QR Code Expired',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.primary)),
-                          SizedBox(height: 2),
-                          Text(
-                            'This QR session has ended. Ask your instructor for a new code.',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.primary),
-                          ),
-                        ],
+                    Icon(
+                      _qrExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
+                      size: 14,
+                      color: _qrExpired ? AppTheme.primary : _timerColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _qrExpired ? 'Expired' : 'Expires in $_timerStr',
+                      style: TextStyle(
+                        color: _qrExpired ? AppTheme.primary : _timerColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-
-            // Lecture Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: card,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppTheme.primary.withValues(alpha: 0.15)
-                          : AppTheme.primaryLight,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text('ONGOING LECTURE',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
-                            letterSpacing: 0.5)),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Advanced Software Engineering',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: txt)),
-                  const SizedBox(height: 4),
-                  Text('CS402 • Dr. Sarah Johnson',
-                      style: TextStyle(fontSize: 13, color: txtSec)),
-                  const SizedBox(height: 16),
-                  const _InfoRow(
-                    icon: Icons.location_on_outlined,
-                    iconColor: AppTheme.primary,
-                    label: 'Location',
-                    value: 'Hall 302',
-                  ),
-                  const SizedBox(height: 10),
-                  const _InfoRow(
-                    icon: Icons.location_searching,
-                    iconColor: AppTheme.warning,
-                    label: 'GPS Verification',
-                    value: 'Checking Location...',
-                    valueColor: AppTheme.warning,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── Timer Progress Bar ──────────────────────
-                  if (!_scanComplete) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('QR Valid For',
-                            style: TextStyle(
-                                fontSize: 12, color: txtSec, fontWeight: FontWeight.w500)),
-                        Text(
-                          _qrExpired ? 'Expired' : _timerStr,
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: _qrExpired ? AppTheme.primary : _timerColor),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _qrSeconds / _qrDuration,
-                        minHeight: 6,
-                        backgroundColor: (_qrExpired ? AppTheme.primary : _timerColor)
-                            .withValues(alpha: 0.15),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            _qrExpired ? AppTheme.primary : _timerColor),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: txt),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                onSelected: (v) {
+                  if (v == 'reset') {
+                    _resetScan();
+                  } else if (v == 'history') {
+                    _showHistoryBottomSheet(context);
+                  } else if (v == 'help') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Point your camera at the QR code displayed by your instructor.'),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 3),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  Center(
-                    child: Column(
-                      children: [
-                        Text('Status',
-                            style: TextStyle(
-                                fontSize: 12, color: txtSec, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 4),
-                        Text(
-                          _qrExpired
-                              ? '⏱️ QR Code Expired'
-                              : _scanComplete
-                              ? '✅ Attendance Recorded'
-                              : _scanning
-                              ? 'Scanning...'
-                              : 'Waiting for scan...',
-                          style: TextStyle(
-                              fontSize: 15,
-                              color: _qrExpired
-                                  ? AppTheme.primary
-                                  : _scanComplete
-                                  ? AppTheme.success
-                                  : txtLight,
-                              fontStyle: FontStyle.italic),
-                        ),
-                      ],
-                    ),
+                    );
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'reset',
+                    child: Row(children: [
+                      Icon(Icons.refresh_outlined, size: 18),
+                      SizedBox(width: 10),
+                      Text('Reset Scanner'),
+                    ]),
+                  ),
+                  PopupMenuItem(
+                    value: 'history',
+                    child: Row(children: [
+                      Icon(Icons.history_outlined, size: 18),
+                      SizedBox(width: 10),
+                      Text('View History'),
+                    ]),
+                  ),
+                  PopupMenuItem(
+                    value: 'help',
+                    child: Row(children: [
+                      Icon(Icons.help_outline, size: 18),
+                      SizedBox(width: 10),
+                      Text('How to Scan'),
+                    ]),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Camera View
-            Container(
-              height: 300,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (_scanning && !kIsWeb && _cameraController != null)
-                      MobileScanner(
-                        controller: _cameraController!,
-                        onDetect: _onQRDetected,
-                      )
-                    else
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: _scanning
-                                ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
-                                : [Colors.black87, Colors.black],
-                          ),
-                        ),
-                      ),
-
-                    if (!_scanComplete && !_qrExpired) ...[
-                      Positioned(top: 40, left: 60, child: _cornerBracket(true, true)),
-                      Positioned(top: 40, right: 60, child: _cornerBracket(true, false)),
-                      Positioned(bottom: 40, left: 60, child: _cornerBracket(false, true)),
-                      Positioned(bottom: 40, right: 60, child: _cornerBracket(false, false)),
-                    ],
-
-                    if (_scanning && kIsWeb)
-                      AnimatedBuilder(
-                        animation: _scanLineController,
-                        builder: (context, child) {
-                          return Positioned(
-                            top: 40 + (_scanLineController.value * 220),
-                            left: 60,
-                            right: 60,
-                            child: Container(
-                              height: 2,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    AppTheme.primary.withValues(alpha: 0.8),
-                                    AppTheme.primary,
-                                    AppTheme.primary.withValues(alpha: 0.8),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.primary.withValues(alpha: 0.5),
-                                    blurRadius: 12,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                    // ── Expired Overlay ───────────────────────
-                    if (_qrExpired)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.timer_off_outlined,
-                                color: AppTheme.primary, size: 34),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text('QR Code Expired',
-                              style: TextStyle(
-                                  color: AppTheme.primary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Contact your instructor\nfor a new QR code',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white60, fontSize: 13),
-                          ),
-                        ],
-                      )
-                    else if (!_scanning && !_scanComplete)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                                kIsWeb ? Icons.camera_alt_outlined : Icons.qr_code_scanner,
-                                color: Colors.white,
-                                size: 34),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            kIsWeb ? 'Camera Simulation' : 'Camera Ready',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            kIsWeb
-                                ? 'Tap "Scan QR Code" to simulate\nan attendance scan'
-                                : 'Tap "Scan QR Code" to open\nthe camera and scan',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white60, fontSize: 13),
-                          ),
-                        ],
-                      ),
-
-                    if (_scanning && !kIsWeb)
-                      Positioned(
-                        bottom: 20,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // ── Expired Banner ──────────────────────────────────
+                if (_qrExpired)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.timer_off_outlined, color: AppTheme.primary, size: 22),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Point at QR code...',
+                              Text('QR Code Expired',
                                   style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primary)),
+                              SizedBox(height: 2),
+                              Text(
+                                'This QR session has ended. Ask your instructor for a new code.',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.primary),
+                              ),
                             ],
                           ),
                         ),
-                      ),
-
-                    if (_scanning && kIsWeb)
-                      const Positioned(
-                        bottom: 20,
-                        child: Text('Scanning...',
-                            style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600)),
-                      ),
-
-                    if (_scanComplete)
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: AppTheme.success.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.check_circle,
-                                color: AppTheme.success, size: 40),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text('Attendance Recorded!',
-                              style: TextStyle(
-                                  color: AppTheme.success,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 4),
-                          Text(
-                            _scannedData.isNotEmpty
-                                ? _scannedData
-                                : 'Advanced Software Engineering',
-                            style: const TextStyle(color: Colors.white60, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Scan Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _scanning || _qrExpired
-                    ? null
-                    : _scanComplete
-                    ? () { _resetScan(); _startScan(); }
-                    : _startScan,
-                icon: Icon(_scanComplete ? Icons.refresh : Icons.qr_code_scanner),
-                label: Text(_qrExpired
-                    ? 'QR Expired'
-                    : _scanning
-                    ? 'Scanning...'
-                    : _scanComplete
-                    ? 'Scan Again'
-                    : 'Scan QR Code'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-
-            if (kIsWeb)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppTheme.info.withValues(alpha: 0.1)
-                        : const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.info.withValues(alpha: 0.3)),
+                      ],
+                    ),
                   ),
-                  child: Row(
+
+                // Lecture Info Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: card,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline, color: AppTheme.info, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Camera scanning is simulated on web. Open this on your mobile device for real QR scanning.',
-                          style: TextStyle(fontSize: 12, color: AppTheme.info, height: 1.4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppTheme.primary.withOpacity(0.15)
+                              : AppTheme.primaryLight,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('ONGOING LECTURE',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primary,
+                                letterSpacing: 0.5)),
+                      ),
+                      const SizedBox(height: 12),
+                      if (state is AttendanceSuccess) ...[
+                        Text(state.result.courseName ?? 'Unknown Course',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: txt)),
+                        const SizedBox(height: 4),
+                        Text('${state.result.courseCode ?? ''} • ${state.result.instructor ?? ''}',
+                            style: TextStyle(fontSize: 13, color: txtSec)),
+                        const SizedBox(height: 16),
+                        _InfoRow(
+                          icon: Icons.location_on_outlined,
+                          iconColor: AppTheme.primary,
+                          label: 'Location',
+                          value: state.result.room ?? 'Unknown Room',
+                        ),
+                      ] else ...[
+                        Text('Ready to scan...',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: txt)),
+                        const SizedBox(height: 4),
+                        Text('Point camera at instructor\'s QR',
+                            style: TextStyle(fontSize: 13, color: txtSec)),
+                        const SizedBox(height: 16),
+                        const _InfoRow(
+                          icon: Icons.location_searching,
+                          iconColor: AppTheme.warning,
+                          label: 'GPS Verification',
+                          value: 'Checking Location...',
+                          valueColor: AppTheme.warning,
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 16),
+
+                      // ── Timer Progress Bar ──────────────────────
+                      if (!_scanComplete) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('QR Valid For',
+                                style: TextStyle(
+                                    fontSize: 12, color: txtSec, fontWeight: FontWeight.w500)),
+                            Text(
+                              _qrExpired ? 'Expired' : _timerStr,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _qrExpired ? AppTheme.primary : _timerColor),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _qrSeconds / _qrDuration,
+                            minHeight: 6,
+                            backgroundColor: (_qrExpired ? AppTheme.primary : _timerColor)
+                                .withOpacity(0.15),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                _qrExpired ? AppTheme.primary : _timerColor),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      Center(
+                        child: Column(
+                          children: [
+                            Text('Status',
+                                style: TextStyle(
+                                    fontSize: 12, color: txtSec, fontWeight: FontWeight.w500)),
+                            const SizedBox(height: 4),
+                            Text(
+                              _qrExpired
+                                  ? '⏱️ QR Code Expired'
+                                  : isSubmitting
+                                  ? 'Submitting...'
+                                  : _scanComplete
+                                  ? '✅ Attendance Recorded'
+                                  : _scanning
+                                  ? 'Scanning...'
+                                  : 'Waiting for scan...',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  color: _qrExpired
+                                      ? AppTheme.primary
+                                      : _scanComplete
+                                      ? AppTheme.success
+                                      : txtLight,
+                                  fontStyle: FontStyle.italic),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+                const SizedBox(height: 16),
+
+                // Camera View
+                Container(
+                  height: 300,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (_scanning && !kIsWeb && _cameraController != null)
+                          MobileScanner(
+                            controller: _cameraController!,
+                            onDetect: _onQRDetected,
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: _scanning
+                                    ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
+                                    : [Colors.black87, Colors.black],
+                              ),
+                            ),
+                          ),
+
+                        if (!_scanComplete && !_qrExpired) ...[
+                          Positioned(top: 40, left: 60, child: _cornerBracket(true, true)),
+                          Positioned(top: 40, right: 60, child: _cornerBracket(true, false)),
+                          Positioned(bottom: 40, left: 60, child: _cornerBracket(false, true)),
+                          Positioned(bottom: 40, right: 60, child: _cornerBracket(false, false)),
+                        ],
+
+                        if (_scanning && kIsWeb)
+                          AnimatedBuilder(
+                            animation: _scanLineController,
+                            builder: (context, child) {
+                              return Positioned(
+                                top: 40 + (_scanLineController.value * 220),
+                                left: 60,
+                                right: 60,
+                                child: Container(
+                                  height: 2,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        AppTheme.primary.withOpacity(0.8),
+                                        AppTheme.primary,
+                                        AppTheme.primary.withOpacity(0.8),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.primary.withOpacity(0.5),
+                                        blurRadius: 12,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                        // ── Expired Overlay ───────────────────────
+                        if (_qrExpired)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.timer_off_outlined,
+                                    color: AppTheme.primary, size: 34),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text('QR Code Expired',
+                                  style: TextStyle(
+                                      color: AppTheme.primary,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Contact your instructor\nfor a new QR code',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white60, fontSize: 13),
+                              ),
+                            ],
+                          )
+                        else if (isSubmitting)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(color: Colors.white),
+                              const SizedBox(height: 16),
+                              const Text('Recording Attendance...',
+                                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                            ],
+                          )
+                        else if (!_scanning && !_scanComplete)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                    kIsWeb ? Icons.camera_alt_outlined : Icons.qr_code_scanner,
+                                    color: Colors.white,
+                                    size: 34),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                kIsWeb ? 'Camera Simulation' : 'Camera Ready',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                kIsWeb
+                                    ? 'Tap "Scan QR Code" to simulate\nan attendance scan'
+                                    : 'Tap "Scan QR Code" to open\nthe camera and scan',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white60, fontSize: 13),
+                              ),
+                            ],
+                          ),
+
+                        if (_scanning && !kIsWeb && !isSubmitting)
+                          Positioned(
+                            bottom: 20,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Point at QR code...',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                        if (_scanning && kIsWeb && !isSubmitting)
+                          const Positioned(
+                            bottom: 20,
+                            child: Text('Scanning...',
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600)),
+                          ),
+
+                        if (_scanComplete && state is AttendanceSuccess)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.success.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.check_circle,
+                                    color: AppTheme.success, size: 40),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text('Attendance Recorded!',
+                                  style: TextStyle(
+                                      color: AppTheme.success,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 4),
+                              Text(
+                                _scannedData.isNotEmpty
+                                    ? _scannedData
+                                    : 'Course Attendance Recorded',
+                                style: const TextStyle(color: Colors.white60, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Scan Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _scanning || _qrExpired || isSubmitting
+                        ? null
+                        : _scanComplete
+                        ? () { _resetScan(); _startScan(); }
+                        : _startScan,
+                    icon: Icon(_scanComplete ? Icons.refresh : Icons.qr_code_scanner),
+                    label: Text(_qrExpired
+                        ? 'QR Expired'
+                        : isSubmitting
+                        ? 'Submitting...'
+                        : _scanning
+                        ? 'Scanning...'
+                        : _scanComplete
+                        ? 'Scan Again'
+                        : 'Scan QR Code'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+
+                if (kIsWeb)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.info.withOpacity(0.1)
+                            : const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.info.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, color: AppTheme.info, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Camera scanning is simulated on web. Open this on your mobile device for real QR scanning.',
+                              style: TextStyle(fontSize: 12, color: AppTheme.info, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -1,4 +1,11 @@
 import 'dart:async';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_state.dart';
+import '../logic/dashboard/dashboard_bloc.dart';
+import '../logic/dashboard/dashboard_event.dart';
+import '../logic/dashboard/dashboard_state.dart';
+import '../data/models/dashboard_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app_theme.dart';
@@ -169,6 +176,14 @@ class _DashboardState extends State<DashboardScreen>
     _qrTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_qrSeconds > 0) setState(() => _qrSeconds--);
     });
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      final user = authState.user;
+      if (user.studentNumericId != null) {
+        context.read<DashboardBloc>().add(LoadDashboard(user.studentNumericId!));
+      }
+    }
   }
 
   @override
@@ -294,13 +309,78 @@ class _DashboardState extends State<DashboardScreen>
     final border = _border(context);
     final txt = _txt(context);
     final txtSec = _txtSec(context);
-    final newCount = _notifs.where((n) => n['isNew'] == true).length;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = context.read<AuthBloc>().state;
+    final user = authState is AuthAuthenticated ? authState.user : null;
+    final userName = user?.name.toUpperCase() ?? 'STUDENT';
+    final userInitials = user?.initials ?? 'ST';
+    final userCode = user?.studentCode ?? 'N/A';
+    final isDark = _isDark;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          SafeArea(
+      body: BlocBuilder<DashboardBloc, DashboardState>(
+        builder: (context, state) {
+          if (state is DashboardInitial || state is DashboardLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is DashboardError) {
+            return Center(child: Text('Failed to load: ${state.message}', style: TextStyle(color: txt)));
+          }
+
+          final data = (state as DashboardLoaded).data;
+          final newCount = data.unreadNotifCount;
+
+          final dynamicStats = [
+            _StatItem(
+                icon: Icons.menu_book_outlined,
+                iconColor: AppTheme.primary,
+                label: 'Total Courses',
+                value: data.totalEnrolledCourses.toString(),
+                trend: 'This Sem',
+                trendUp: true),
+            _StatItem(
+                icon: Icons.emoji_events_outlined,
+                iconColor: AppTheme.blue,
+                label: 'Average GPA',
+                value: data.cgpa.toStringAsFixed(2),
+                trend: '${data.earnedCredits} / ${data.requiredCredits} Cr',
+                trendUp: true),
+            _StatItem(
+                icon: Icons.calendar_today_outlined,
+                iconColor: AppTheme.orange,
+                label: 'Classes Today',
+                value: data.todayClasses.length.toString(),
+                trend: 'On Track',
+                trendUp: true),
+          ];
+
+          final dynamicClasses = data.todayClasses.map((c) {
+            Color statusColor = AppTheme.info;
+            if (c.status == 'live') statusColor = AppTheme.primary;
+            if (c.status == 'done') statusColor = AppTheme.success;
+            return _ClassItem(
+              name: c.courseName,
+              sub: '${c.instructor} • ${c.room}',
+              time: c.formattedTime,
+              status: c.status == 'live' ? 'Live Now' : (c.status == 'done' ? 'Completed' : 'Upcoming'),
+              statusColor: statusColor,
+              dotColor: statusColor,
+            );
+          }).toList();
+
+          final dynamicNotifs = data.notifications.map((n) {
+            return {
+              'icon': Icons.notifications_outlined,
+              'color': AppTheme.primary,
+              'title': n.title,
+              'sub': n.body,
+              'time': n.timeAgo,
+              'isNew': !n.isRead,
+            };
+          }).toList();
+
+          return Stack(
+            children: [
+              SafeArea(
             child: CustomScrollView(
               slivers: [
                 // ── AppBar ────────────────────────────────────────
@@ -425,10 +505,10 @@ class _DashboardState extends State<DashboardScreen>
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('TOKA KHALED',
+                                  Text(userName,
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700, color: txt)),
-                                  Text('ID: 21at41',
+                                  Text('ID: $userCode',
                                       style: TextStyle(fontSize: 11, color: txtSec)),
                                 ]),
                           ),
@@ -450,9 +530,9 @@ class _DashboardState extends State<DashboardScreen>
                             gradient: AppTheme.redGradient,
                             shape: BoxShape.circle,
                           ),
-                          child: const Center(
-                            child: Text('TK',
-                                style: TextStyle(
+                          child: Center(
+                            child: Text(userInitials,
+                                style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11)),
@@ -479,7 +559,7 @@ class _DashboardState extends State<DashboardScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Welcome back, TOKA KHALED 👋',
+                                    'Welcome back, ${user?.firstName ?? 'Student'} 👋',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
@@ -539,7 +619,7 @@ class _DashboardState extends State<DashboardScreen>
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                           childAspectRatio: 1.35,
-                          children: _stats
+                          children: dynamicStats
                               .map((s) => _StatCard(item: s, card: card, border: border))
                               .toList(),
                         ),
@@ -558,7 +638,9 @@ class _DashboardState extends State<DashboardScreen>
                             border: Border.all(color: border),
                           ),
                           child: Column(
-                            children: _classes
+                            children: dynamicClasses.isEmpty
+                                ? [Padding(padding: const EdgeInsets.all(16), child: Text("No classes today!", style: TextStyle(color: txtSec)))]
+                                : dynamicClasses
                                 .map((c) => _ClassRow(
                                 item: c, txtColor: txt, txtSec: txtSec, border: border))
                                 .toList(),
@@ -705,7 +787,7 @@ class _DashboardState extends State<DashboardScreen>
                           ],
                         ),
                       ),
-                      ..._notifs.map((n) => _NotifRow(
+                      ...dynamicNotifs.map((n) => _NotifRow(
                           notif: n, border: border, txtColor: txt, txtSec: txtSec)),
                     ],
                   ),
@@ -713,9 +795,10 @@ class _DashboardState extends State<DashboardScreen>
               ),
             ),
         ],
-      ),
-    );
-  }
+      );
+    }),
+  );
+}
 
   Widget _dbQuickBtn({
     required IconData icon,

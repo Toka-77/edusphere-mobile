@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../logic/auth/auth_bloc.dart';
+import '../logic/auth/auth_event.dart';
+import '../logic/auth/auth_state.dart';
 import '../app_theme.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
@@ -56,6 +60,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    // Unfocus ALL text fields first and wait for the browser DOM to settle.
+    // This prevents the Flutter Web text_editing engine crash that occurs
+    // when the widget tree switches screens while a TextField still has focus.
+    FocusScope.of(context).unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
     setState(() => _error = '');
     final email = _emailController.text.trim();
     final pass  = _passwordController.text;
@@ -72,23 +84,22 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+    context.read<AuthBloc>().add(LoginRequested(email, pass));
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      color: _bg,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          setState(() => _error = state.message);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        color: _bg,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
         body: SafeArea(
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
@@ -100,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -409,30 +421,35 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(
             width: double.infinity,
             height: 52,
-            child: ElevatedButton(
-              onPressed: _loading ? null : _handleLogin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                disabledBackgroundColor:
-                AppTheme.primary.withValues(alpha: 0.6),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                elevation: 0,
-              ),
-              child: _loading
-                  ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white),
-              )
-                  : Text(
-                'Sign In',
-                style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white),
-              ),
+            child: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                final isLoading = state is AuthLoading;
+                return ElevatedButton(
+                  onPressed: isLoading ? null : _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    disabledBackgroundColor:
+                    AppTheme.primary.withValues(alpha: 0.6),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: Colors.white),
+                  )
+                      : Text(
+                    'Sign In',
+                    style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                );
+              },
             ),
           ),
 

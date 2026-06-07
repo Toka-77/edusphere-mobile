@@ -28,6 +28,8 @@ class AppTheme {
   // --blu: #2979ff
   static const Color info =
       Color(0xFF2979FF);
+  static const Color error =
+      Color(0xFFDC2626);
   static const Color border =
       Color(0xFFE5E7EB);
   // --grn: #00e676
