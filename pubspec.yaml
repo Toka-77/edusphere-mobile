@@ -17,6 +17,7 @@ dependencies:
   equatable: ^2.0.8
   shared_preferences: ^2.5.5
   image_picker: ^1.1.2
+  pusher_channels_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:

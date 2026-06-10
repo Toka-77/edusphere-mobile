@@ -5,6 +5,8 @@ import '../logic/auth/auth_state.dart';
 import '../logic/dashboard/dashboard_bloc.dart';
 import '../logic/dashboard/dashboard_event.dart';
 import '../logic/dashboard/dashboard_state.dart';
+import '../logic/notification/notification_bloc.dart';
+import '../logic/notification/notification_state.dart';
 import '../data/models/dashboard_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,7 @@ import 'add_drop_screen.dart';
 import 'login_screen.dart';
 import 'attendance_qr_screen.dart';
 import 'settings_screen.dart';
+import 'notifications_screen.dart';
 
 // ── Data ─────────────────────────────────────────────────────────
 
@@ -446,40 +449,50 @@ class _DashboardState extends State<DashboardScreen>
                         color: txt,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        setState(() {
-                          _showNotif = !_showNotif;
-                          if (_showNotif) {
-                            for (final n in _notifs) n['isNew'] = false;
-                          }
-                        });
+                    // Bell icon — badge from NotificationBloc (real-time)
+                    BlocBuilder<NotificationBloc, NotificationState>(
+                      builder: (context, notifState) {
+                        final liveCount = notifState.unreadCount;
+                        return IconButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const NotificationsScreen()),
+                            );
+                          },
+                          icon: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(Icons.notifications_outlined, color: txt),
+                              if (liveCount > 0)
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: const BoxDecoration(
+                                        color: AppTheme.primary,
+                                        shape: BoxShape.circle),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      liveCount > 99
+                                          ? '99+'
+                                          : '$liveCount',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
                       },
-                      icon: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Icon(Icons.notifications_outlined, color: txt),
-                          if (newCount > 0)
-                            Positioned(
-                              right: -2,
-                              top: -2,
-                              child: Container(
-                                width: 16,
-                                height: 16,
-                                decoration: const BoxDecoration(
-                                    color: AppTheme.primary,
-                                    shape: BoxShape.circle),
-                                alignment: Alignment.center,
-                                child: Text('$newCount',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700)),
-                              ),
-                            ),
-                        ],
-                      ),
                     ),
                     IconButton(
                       icon: Icon(Icons.settings_outlined, color: txt),

@@ -29,9 +29,15 @@ import 'logic/chatbot/chatbot_bloc.dart';
 import 'data/services/attendance_service.dart';
 import 'logic/attendance/attendance_bloc.dart';
 
+// Notifications (real-time via Reverb)
+import 'core/storage/secure_storage.dart';
+import 'data/services/notification_service.dart';
+import 'logic/notification/notification_bloc.dart';
+import 'logic/notification/notification_event.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Core Services
   final dioClient = DioClient();
   final authService = AuthService(dioClient);
@@ -45,6 +51,9 @@ void main() {
   final curriculumService = CurriculumService(dioClient);
   final chatbotService = ChatbotService(dioClient);
   final attendanceService = AttendanceService(dioClient);
+
+  // Notification service singleton
+  final notificationService = NotificationService();
 
   runApp(
     MultiRepositoryProvider(
@@ -61,6 +70,7 @@ void main() {
         RepositoryProvider.value(value: curriculumService),
         RepositoryProvider.value(value: chatbotService),
         RepositoryProvider.value(value: attendanceService),
+        RepositoryProvider.value(value: notificationService),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -104,6 +114,12 @@ void main() {
               attendanceService: context.read<AttendanceService>(),
             ),
           ),
+          BlocProvider<NotificationBloc>(
+            create: (context) => NotificationBloc(
+              dioClient: context.read<DioClient>(),
+              notifService: context.read<NotificationService>(),
+            ),
+          ),
         ],
         child: const EduSphereApp(),
       ),
@@ -137,13 +153,30 @@ class EduSphereApp extends StatelessWidget {
               // builder wraps ALL routes — persists through pushAndRemoveUntil
               builder: (context, child) {
                 return BlocListener<AuthBloc, AuthState>(
-                  listener: (context, state) {
+                  listener: (context, state) async {
                     if (state is AuthAuthenticated) {
+                      // Navigate to home
                       _navigatorKey.currentState?.pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const HomeScreen()),
                         (_) => false,
                       );
+                      // Start real-time notifications
+                      final token = await SecureStorage.getToken();
+                      if (token != null && context.mounted) {
+                        context.read<NotificationBloc>().add(
+                          LoadNotifications(
+                            userId: state.user.id,
+                            token: token,
+                          ),
+                        );
+                      }
                     } else if (state is AuthUnauthenticated) {
+                      // Disconnect WS on logout
+                      if (context.mounted) {
+                        context.read<NotificationBloc>().add(
+                          DisconnectNotifications(),
+                        );
+                      }
                       _navigatorKey.currentState?.pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const LoginScreen()),
                         (_) => false,
