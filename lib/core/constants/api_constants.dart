@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Use 127.0.0.1 for Web/iOS Simulator, and 10.0.2.2 for Android Emulator
-  static const String baseUrl = kIsWeb
-      ? 'http://localhost:8000/api'
-      : 'http://10.0.2.2:8000/api';
+  // Use 127.0.0.1 for Web/iOS Simulator, and ngrok for the APK/mobile
+  static const String baseUrl = kIsWeb ? 'http://127.0.0.1:8000/api' : 'https://tighten-epidermal-hug.ngrok-free.dev/api';
 
   // ── Auth endpoints ───────────────────────────────────────────────
   static const String login = '/login';
@@ -25,7 +23,7 @@ class ApiConstants {
 
   /// POST /broadcasting/auth — used by Pusher for private channel auth.
   /// Points at the Laravel HTTP server (port 8000), NOT the Reverb WS server.
-  static String get broadcastingAuthUrl =>
-      kIsWeb ? 'http://localhost:8000/broadcasting/auth'
-             : 'http://10.0.2.2:8000/broadcasting/auth';
+  static String get broadcastingAuthUrl => kIsWeb 
+      ? 'http://127.0.0.1:8000/broadcasting/auth' 
+      : 'https://tighten-epidermal-hug.ngrok-free.dev/broadcasting/auth';
 }
